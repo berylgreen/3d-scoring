@@ -18,6 +18,8 @@ data/
 .pytest_cache/
 .coverage
 htmlcov/
+thumbnail_cache/
+
 
 # Editor
 .vscode/

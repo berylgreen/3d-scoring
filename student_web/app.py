@@ -160,6 +160,38 @@ def api_thumbnail(target_id):
     target = get_target_by_id(target_id)
     if not target: abort(404)
     
+    if settings.COURSE_TYPE == "animation":
+        video_path = find_video_file(target.get("folder_path"))
+        if video_path and os.path.exists(video_path):
+            cache_dir = os.path.join(PROJECT_ROOT, "thumbnail_cache")
+            os.makedirs(cache_dir, exist_ok=True)
+            safe_id = target_id.replace('/', '_').replace('\\', '_')
+            cached_thumb = os.path.join(cache_dir, f"{safe_id}_frame_5s.jpg")
+            
+            if os.path.exists(cached_thumb):
+                return send_file(cached_thumb)
+            else:
+                try:
+                    import cv2
+                    cap = cv2.VideoCapture(video_path)
+                    
+                    # 尝试跳到第5秒 (5000毫秒)
+                    cap.set(cv2.CAP_PROP_POS_MSEC, 5000)
+                    ret, frame = cap.read()
+                    
+                    # 如果视频长度不足5秒或读取失败，则回退读取第一帧
+                    if not ret:
+                        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                        ret, frame = cap.read()
+                        
+                    cap.release()
+                    
+                    if ret:
+                        cv2.imwrite(cached_thumb, frame)
+                        return send_file(cached_thumb)
+                except Exception as e:
+                    print(f"提取视频帧失败 {video_path}: {e}")
+
     thumb_path = find_thumbnail(target.get("folder_path"))
     if thumb_path and os.path.exists(thumb_path):
         return send_file(thumb_path)
