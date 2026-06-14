@@ -51,11 +51,13 @@
                 </div>
             </div>
 
+            {% if course != 'animation' %}
             <div class="score-display sub-stat"
                 style="margin-top: 10px; padding-top:10px; border-top: 1px dashed #eee;">
                 <span class="label">模型总面数</span>
                 <span class="value" id="polyCountDisplay" style="font-size: 1.5rem; color: #666;">--</span>
             </div>
+            {% endif %}
 
             <div class="score-breakdown" id="scoreDimensions">
                 <!-- Score radar/list -->
@@ -63,7 +65,7 @@
 
             <!-- Max Files Section (侧边栏版本) -->
             <div id="maxFilesSection" class="sidebar-max-files hidden">
-                <h3>📦 3ds Max 源文件</h3>
+                <h3>{% if course == 'animation' %}📁 工程文件{% else %}📦 3ds Max 源文件{% endif %}</h3>
                 <div id="maxFilesList" class="max-files-list">
                     <!-- Max files list -->
                 </div>
@@ -130,6 +132,7 @@
 
     <script>
         const targetId = "{{ target_id }}";
+        const courseType = "{{ course }}";
         let currentData = null;
         let isEditing = false;
 
@@ -150,16 +153,28 @@
         let currentGroupIndex = 0;
 
         // 评分维度中英文映射和顺序
-        const SCORE_KEYS_ORDER = [
-            { key: 'theme_difficulty', label: '主题难度' },
-            { key: 'modeling_accuracy', label: '建模准确性与完成度' },
-            { key: 'topology', label: '拓扑结构合理' },
-            { key: 'materials_textures', label: '材质和贴图' },
-            { key: 'uv_mapping', label: '纹理映射 (UV)' },
-            { key: 'lighting_rendering', label: '光照渲染' },
-            { key: 'visual_quality', label: '整体视觉质量' },
-            { key: 'documentation', label: '文档整理' }
-        ];
+        let SCORE_KEYS_ORDER = [];
+        if (courseType === 'animation') {
+            SCORE_KEYS_ORDER = [
+                { key: 'theme', label: '主题思想' },
+                { key: 'character_animation', label: '角色动画设计' },
+                { key: 'scene_camera', label: '场景与镜头设计' },
+                { key: 'material_lighting', label: '材质与光影' },
+                { key: 'render_postprocess', label: '渲染与后期' },
+                { key: 'documentation', label: '文档整理与反思' }
+            ];
+        } else {
+            SCORE_KEYS_ORDER = [
+                { key: 'theme_difficulty', label: '主题难度' },
+                { key: 'modeling_accuracy', label: '建模准确性与完成度' },
+                { key: 'topology', label: '拓扑结构合理' },
+                { key: 'materials_textures', label: '材质和贴图' },
+                { key: 'uv_mapping', label: '纹理映射 (UV)' },
+                { key: 'lighting_rendering', label: '光照渲染' },
+                { key: 'visual_quality', label: '整体视觉质量' },
+                { key: 'documentation', label: '文档整理' }
+            ];
+        }
 
         // Load group list for navigation
         async function loadGroupList() {
@@ -246,8 +261,10 @@
             document.getElementById('groupScore').innerText = target.total_score;
 
             // Poly Count
-            const pCount = info.poly_count || 0;
-            document.getElementById('polyCountDisplay').innerText = pCount.toLocaleString();
+            if (document.getElementById('polyCountDisplay')) {
+                const pCount = info.poly_count || 0;
+                document.getElementById('polyCountDisplay').innerText = pCount.toLocaleString();
+            }
 
             // 自主选题标签
             const selfTopicTag = document.getElementById('selfTopicTag');
@@ -319,7 +336,7 @@
                         </div>
                     `).join('');
                 } else {
-                    maxList.innerHTML = '<div class="no-files-hint">无 .max 源文件</div>';
+                    maxList.innerHTML = courseType === 'animation' ? '<div class="no-files-hint">无工程文件</div>' : '<div class="no-files-hint">无 .max 源文件</div>';
                 }
 
                 // Show/Hide Folder Button
