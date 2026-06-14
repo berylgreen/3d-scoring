@@ -102,7 +102,10 @@ def api_students():
 def open_folder():
     path = request.json.get('folder_path')
     if path and os.path.exists(path):
-        os.startfile(path)
+        # 优先打开包含 Word 文档的子目录
+        docx_path = find_docx_file(path)
+        open_path = os.path.dirname(docx_path) if docx_path and os.path.exists(docx_path) else path
+        os.startfile(open_path)
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Folder not found"}), 404
 
@@ -147,8 +150,8 @@ def api_target_detail(target_id):
             personal_images = find_personal_images(folder_path, target.get("individuals", []))
             response_data["media"]["personal_images"] = {name: f"/api/image/{target_id}/personal/{name}" for name in personal_images}
             
-        max_files = find_max_files(folder_path)
-        response_data["media"]["max_files"] = max_files
+    max_files = find_max_files(folder_path)
+    response_data["media"]["max_files"] = max_files
 
     return jsonify(response_data)
 

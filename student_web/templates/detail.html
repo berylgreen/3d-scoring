@@ -65,7 +65,7 @@
 
             <!-- Max Files Section (侧边栏版本) -->
             <div id="maxFilesSection" class="sidebar-max-files hidden">
-                <h3>{% if course == 'animation' %}📁 工程文件{% else %}📦 3ds Max 源文件{% endif %}</h3>
+                <h3>{% if course == 'animation' %}📁 工程文件{% else %}📦 源文件{% endif %}</h3>
                 <div id="maxFilesList" class="max-files-list">
                     <!-- Max files list -->
                 </div>
@@ -342,7 +342,7 @@
                         </div>
                     `).join('');
                 } else {
-                    maxList.innerHTML = courseType === 'animation' ? '<div class="no-files-hint">无工程文件</div>' : '<div class="no-files-hint">无 .max 源文件</div>';
+                    maxList.innerHTML = courseType === 'animation' ? '<div class="no-files-hint">无工程文件</div>' : '<div class="no-files-hint">无源文件</div>';
                 }
 
                 // Show/Hide Folder Button

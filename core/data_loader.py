@@ -304,14 +304,17 @@ def find_max_files(folder_path: str) -> List[Dict[str, str]]:
     if not folder.exists():
         return []
     
-    max_files = list(folder.rglob("*.max"))
-    if not max_files:
+    source_files = []
+    for ext in ["*.max", "*.blend", "*.ma", "*.mb", "*.c4d"]:
+        source_files.extend(list(folder.rglob(ext)))
+        
+    if not source_files:
         return []
     
-    max_files.sort(key=lambda x: x.stat().st_size, reverse=True)
+    source_files.sort(key=lambda x: x.stat().st_size, reverse=True)
     
     result = []
-    for f in max_files:
+    for f in source_files:
         size_mb = f.stat().st_size / (1024 * 1024)
         result.append({
             "name": f.name,

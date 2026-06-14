@@ -29,8 +29,8 @@ if "%found%"=="1" (
     echo Please run "server.bat stop" first.
     goto end
 )
-echo [START] Starting server...
-start "3D Scoring Web Server" cmd /c "python student_web\app.py"
+echo [START] Starting server (Hidden Console)...
+start "" pythonw student_web\app.py
 echo [SUCCESS] Server started in background!
 echo [URL] Visit http://127.0.0.1:5000
 goto end
@@ -58,8 +58,8 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING
     taskkill /F /PID %%a >nul 2>&1
 )
 timeout /t 1 >nul
-echo [START] Starting new server...
-start "3D Scoring Web Server" cmd /c "python student_web\app.py"
+echo [START] Starting new server (Hidden Console)...
+start "" pythonw student_web\app.py
 echo [SUCCESS] Server restarted!
 echo [URL] Visit http://127.0.0.1:5000
 goto end
