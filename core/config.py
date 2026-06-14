@@ -17,7 +17,7 @@ class Settings:
 
         # 加载 .env 文件
         env_path = self.PROJECT_ROOT / ".env"
-        load_dotenv(env_path, encoding='utf-8')
+        load_dotenv(env_path, encoding='utf-8', override=True)
 
         # =====================
         # 课程类型与打分模式配置

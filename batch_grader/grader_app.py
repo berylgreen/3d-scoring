@@ -87,25 +87,6 @@ class Evaluator:
                     target_name=target_name,
                     document_content=document_content
                 )
-                schema = {
-                    "type": "object",
-                    "properties": {
-                        "student_name": {"type": "string"},
-                        "scores": {
-                            "type": "object",
-                            "properties": {
-                                "theme": {"type": "number"},
-                                "character_animation": {"type": "number"},
-                                "scene_camera": {"type": "number"},
-                                "material_lighting": {"type": "number"},
-                                "render_postprocess": {"type": "number"},
-                                "documentation": {"type": "number"}
-                            }
-                        },
-                        "overallComment": {"type": "string"},
-                        "task_description": {"type": "string"}
-                    }
-                }
             else:
                 # Group
                 known_names = extract_names_from_string(target_name)
@@ -114,99 +95,27 @@ class Evaluator:
                     known_names=known_names,
                     document_content=document_content
                 )
-                schema = {
-                    "type": "object",
-                    "properties": {
-                        "group_info": {
-                            "type": "object",
-                            "properties": {
-                                "group_name": {"type": "string"},
-                                "scores": {
-                                    "type": "object",
-                                    "properties": {
-                                        "theme": {"type": "number"},
-                                        "character_animation": {"type": "number"},
-                                        "scene_camera": {"type": "number"},
-                                        "material_lighting": {"type": "number"},
-                                        "render_postprocess": {"type": "number"},
-                                        "documentation": {"type": "number"}
-                                    }
-                                },
-                                "total_group_score": {"type": "number"},
-                                "comments": {"type": "string"}
-                            }
-                        },
-                        "individuals": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "student_name": {"type": "string"},
-                                    "task_description": {"type": "string"},
-                                    "individual_score": {"type": "number"},
-                                    "individual_comment": {"type": "string"}
-                                }
-                            }
-                        }
-                    }
-                }
-
-            files = [uploaded_video] if uploaded_video else []
-            result = self.llm.generate_structured(prompt, schema=schema, files=files)
-            
-            # Post process individual format into consistent JSON format for data loader
-            if settings.GRADING_MODE == "individual":
-                return {
-                    "student_info": {
-                        "student_id": extract_names_from_string(target_name)[0] if extract_names_from_string(target_name) else target_name,
-                        "name": target_name,
-                        "folder_path": folder_path
-                    },
-                    "total_score": sum(result.get("scores", {}).values()),
-                    "scores": result.get("scores", {}),
-                    "overallComment": result.get("overallComment", ""),
-                    "task_description": result.get("task_description", "")
-                }
-            else:
-                return result
                 
-        finally:
-            if uploaded_video:
-                self.llm.delete_file(uploaded_video)
-
-    def _grade_modeling(self, target_name, folder_path, document_content):
-        file_list = get_file_structure(folder_path)
-        file_list_str = "\n".join(file_list[:100]) # limit to 100 files
-        
-        if settings.GRADING_MODE == "group":
-            known_names = extract_names_from_string(target_name)
-            prompt = prompts.MODELING_GROUP_PROMPT.format(
-                target_name=target_name,
-                known_names=known_names,
-                file_list_str=file_list_str,
-                document_content=document_content
-            )
             schema = {
                 "type": "object",
                 "properties": {
                     "group_info": {
                         "type": "object",
                         "properties": {
-                            "group_name": {"type": "string"},
                             "scores": {
                                 "type": "object",
                                 "properties": {
-                                    "theme_difficulty": {"type": "number"},
-                                    "modeling_accuracy": {"type": "number"},
-                                    "topology": {"type": "number"},
-                                    "materials_textures": {"type": "number"},
-                                    "uv_mapping": {"type": "number"},
-                                    "lighting_rendering": {"type": "number"},
-                                    "visual_quality": {"type": "number"},
-                                    "documentation": {"type": "number"}
+                                    "creativity": {"type": "number"},
+                                    "storyboard": {"type": "number"},
+                                    "modeling": {"type": "number"},
+                                    "basic_tech": {"type": "number"},
+                                    "adv_tech": {"type": "number"},
+                                    "fluency": {"type": "number"},
+                                    "rendering": {"type": "number"},
+                                    "document": {"type": "number"}
                                 }
                             },
-                            "total_group_score": {"type": "number"},
+                            "workload_comment": {"type": "string"},
                             "comments": {"type": "string"}
                         }
                     },
@@ -224,44 +133,110 @@ class Evaluator:
                     }
                 }
             }
+
+            files = [uploaded_video] if uploaded_video else []
+            result = self.llm.generate_structured(prompt, schema=schema, files=files)
+            
+            # Post process format into consistent JSON format for data loader
+            import os
+            class_name = os.path.basename(os.path.dirname(folder_path))
+            extracted_names = extract_names_from_string(target_name)
+            student_id = extracted_names[0] if extracted_names else target_name
+            
+            group_info = result.setdefault("group_info", {})
+            group_info["class_name"] = class_name
+            group_info["folder_path"] = folder_path
+            group_info["student_id"] = student_id
+            group_info["name"] = target_name
+            group_info["project_name"] = target_name
+            
+            scores = group_info.get("scores", {})
+            group_info["total_score"] = sum(scores.values()) if scores else 0
+            group_info["max_score"] = 100
+            
+            return result
+                
+        finally:
+            if uploaded_video:
+                self.llm.delete_file(uploaded_video)
+
+    def _grade_modeling(self, target_name, folder_path, document_content):
+        file_list = get_file_structure(folder_path)
+        file_list_str = "\n".join(file_list[:100]) # limit to 100 files
+        
+        if settings.GRADING_MODE == "group":
+            known_names = extract_names_from_string(target_name)
+            prompt = prompts.MODELING_GROUP_PROMPT.format(
+                target_name=target_name,
+                known_names=known_names,
+                file_list_str=file_list_str,
+                document_content=document_content
+            )
         else:
             # Individual modeling logic
             prompt = prompts.MODELING_INDIVIDUAL_PROMPT.format(
                 file_list_str=file_list_str,
                 document_content=document_content
             )
-            schema = {
-                "type": "object",
-                "properties": {
-                    "student_name": {"type": "string"},
-                    "scores": {
+            
+        schema = {
+            "type": "object",
+            "properties": {
+                "group_info": {
+                    "type": "object",
+                    "properties": {
+                        "scores": {
+                            "type": "object",
+                            "properties": {
+                                "theme_difficulty": {"type": "number"},
+                                "modeling_accuracy": {"type": "number"},
+                                "topology": {"type": "number"},
+                                "materials_textures": {"type": "number"},
+                                "uv_mapping": {"type": "number"},
+                                "lighting_rendering": {"type": "number"},
+                                "visual_quality": {"type": "number"},
+                                "documentation": {"type": "number"}
+                            }
+                        },
+                        "workload_comment": {"type": "string"},
+                        "comments": {"type": "string"}
+                    }
+                },
+                "individuals": {
+                    "type": "array",
+                    "items": {
                         "type": "object",
                         "properties": {
-                            "theme": {"type": "number"},
-                            "modeling": {"type": "number"},
-                            "texture": {"type": "number"},
-                            "render": {"type": "number"}
+                            "student_name": {"type": "string"},
+                            "task_description": {"type": "string"},
+                            "individual_score": {"type": "number"},
+                            "individual_comment": {"type": "string"}
                         }
-                    },
-                    "overallComment": {"type": "string"}
+                    }
                 }
             }
+        }
             
         result = self.llm.generate_structured(prompt, schema=schema)
         
-        if settings.GRADING_MODE == "individual":
-            return {
-                "student_info": {
-                    "student_id": extract_names_from_string(target_name)[0] if extract_names_from_string(target_name) else target_name,
-                    "name": target_name,
-                    "folder_path": folder_path
-                },
-                "total_score": sum(result.get("scores", {}).values()),
-                "scores": result.get("scores", {}),
-                "overallComment": result.get("overallComment", "")
-            }
-        else:
-            return result
+        # Post process format into consistent JSON format for data loader
+        import os
+        class_name = os.path.basename(os.path.dirname(folder_path))
+        extracted_names = extract_names_from_string(target_name)
+        student_id = extracted_names[0] if extracted_names else target_name
+        
+        group_info = result.setdefault("group_info", {})
+        group_info["class_name"] = class_name
+        group_info["folder_path"] = folder_path
+        group_info["student_id"] = student_id
+        group_info["name"] = target_name
+        group_info["project_name"] = target_name
+        
+        scores = group_info.get("scores", {})
+        group_info["total_score"] = sum(scores.values()) if scores else 0
+        group_info["max_score"] = 100
+        
+        return result
 
 def run_batch():
     print("=" * 60)

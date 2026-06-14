@@ -156,12 +156,16 @@
         let SCORE_KEYS_ORDER = [];
         if (courseType === 'animation') {
             SCORE_KEYS_ORDER = [
-                { key: 'theme', label: '主题思想' },
-                { key: 'character_animation', label: '角色动画设计' },
-                { key: 'scene_camera', label: '场景与镜头设计' },
-                { key: 'material_lighting', label: '材质与光影' },
-                { key: 'render_postprocess', label: '渲染与后期' },
-                { key: 'documentation', label: '文档整理与反思' }
+                { key: 'creativity', label: '创意与选题' },
+                { key: 'storyboard', label: '分镜与剧本' },
+                { key: 'modeling', label: '场景与角色建模' },
+                { key: 'basic_tech', label: '基础动画技术' },
+                { key: 'adv_tech', label: '高级动画技术' },
+                { key: 'fluency', label: '动画流畅度' },
+                { key: 'mechanics', label: '物理与运动规律' },
+                { key: 'rendering', label: '材质与灯光渲染' },
+                { key: 'document', label: '文档与反思' },
+                { key: 'visual_quality', label: '整体视觉质量' }
             ];
         } else {
             SCORE_KEYS_ORDER = [
@@ -254,7 +258,7 @@
 
         function renderDetail(data) {
             const target = data.target;
-            const info = target.grading_result?.group_info || target.grading_result || {};
+            const info = target.grading_result?.group_info || target.grading_result?.student_info || target.grading_result?.grading_result || target.grading_result || {};
             currentData = { folder_path: target.folder_path }; // for openFolderBtn
             
             document.getElementById('groupName').innerText = target.name;
@@ -291,8 +295,12 @@
             }
 
             // Comments
-            document.getElementById('groupCommentsDisplay').innerText = info.comments || info.overallComment || '';
-            document.getElementById('groupCommentsInput').value = info.comments || info.overallComment || '';
+            let mainComments = info.comments || info.overallComment || '';
+            if (info.individual_comment && (!target.individuals || target.individuals.length === 0)) {
+                mainComments += (mainComments ? '\n\n' : '') + '【个人附加评价】\n' + info.individual_comment;
+            }
+            document.getElementById('groupCommentsDisplay').innerText = mainComments;
+            document.getElementById('groupCommentsInput').value = mainComments;
 
             // Render Score Dimensions in specified order
             const scores = info.scores || {};

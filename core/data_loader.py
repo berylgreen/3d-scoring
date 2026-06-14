@@ -88,7 +88,7 @@ def load_all_targets() -> List[Dict]:
                 })
             else:
                 # individual mode
-                student_info = item.get("student_info", {})
+                student_info = item.get("student_info") or item.get("group_info", {})
                 target_id = student_info.get("student_id", "")
                 if not target_id:
                     continue
@@ -108,9 +108,10 @@ def load_all_targets() -> List[Dict]:
                     "project_name": student_info.get("project_name", ""),
                     "class_name": class_name,
                     "folder_path": current_folder_path,
-                    "total_score": item.get("total_score", 0),
+                    "total_score": item.get("total_score") or student_info.get("total_score", 0),
                     "grading_result": item,
-                    "grading_time": item.get("grading_time", "")
+                    "individuals": item.get("individuals", []),
+                    "grading_time": student_info.get("grading_time", "")
                 })
         return targets
     except Exception as e:
