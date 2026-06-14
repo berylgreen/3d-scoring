@@ -9,59 +9,59 @@ if /I "%ACTION%"=="stop" goto stop_service
 if /I "%ACTION%"=="restart" goto restart_service
 
 echo ===================================================
-echo 3D 评分 Web 服务管理脚本
+echo 3D Scoring Web Server Script
 echo ===================================================
-echo 用法:
-echo   server.bat start   - 启动服务
-echo   server.bat stop    - 停止服务 (强杀占用 5000 端口的进程)
-echo   server.bat restart - 重启服务 (先杀进程再启动)
+echo Usage:
+echo   server.bat start   - Start server
+echo   server.bat stop    - Stop server (kill port 5000)
+echo   server.bat restart - Restart server
 goto end
 
 :start_service
 echo.
-echo [检查] 正在检查端口 5000...
+echo [CHECK] Checking port 5000...
 set found=0
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do (
     set found=1
 )
 if "%found%"=="1" (
-    echo [警告] 端口 5000 已被占用！服务可能已经在运行中。
-    echo 请先执行 "server.bat stop" 来停止旧服务。
+    echo [WARN] Port 5000 is in use! Server may be running.
+    echo Please run "server.bat stop" first.
     goto end
 )
-echo [启动] 正在启动服务...
+echo [START] Starting server...
 start "3D Scoring Web Server" cmd /c "python student_web\app.py"
-echo [成功] 服务已在后台独立窗口中启动！
-echo [访问] 请在浏览器打开: http://127.0.0.1:5000
+echo [SUCCESS] Server started in background!
+echo [URL] Visit http://127.0.0.1:5000
 goto end
 
 :stop_service
 echo.
-echo [停止] 正在查找并关闭占用 5000 端口的 Web 进程...
+echo [STOP] Finding process on port 5000...
 set found=0
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do (
-    echo [操作] 正在结束占用端口的进程 (PID: %%a) ...
+    echo [KILL] Terminating PID: %%a ...
     taskkill /F /PID %%a
     set found=1
 )
 if "%found%"=="0" (
-    echo [提示] 未发现运行在 5000 端口的服务。
+    echo [INFO] No server found on port 5000.
 ) else (
-    echo [成功] 服务已成功彻底停止！
+    echo [SUCCESS] Server stopped!
 )
 goto end
 
 :restart_service
 echo.
-echo [重启] 正在停止当前服务...
+echo [RESTART] Stopping current server...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
 )
 timeout /t 1 >nul
-echo [启动] 正在重新启动服务...
+echo [START] Starting new server...
 start "3D Scoring Web Server" cmd /c "python student_web\app.py"
-echo [成功] 服务已重启并在后台运行！
-echo [访问] 请在浏览器打开: http://127.0.0.1:5000
+echo [SUCCESS] Server restarted!
+echo [URL] Visit http://127.0.0.1:5000
 goto end
 
 :end

@@ -22,7 +22,47 @@ def load_all_targets() -> List[Dict]:
     在 group 模式下，加载所有小组。
     """
     if not JSON_DATA_PATH.exists():
-        return []
+        # Fallback: 扫描本地文件夹以生成基础数据，确保即使未运行AI评分，网页端依然可以浏览作品
+        raw_targets = collect_targets_from_disk()
+        targets = []
+        for t in raw_targets:
+            folder_name = t.get("folder_name", "")
+            folder_path = t.get("folder_path", "")
+            class_name = t.get("class_name", "")
+            
+            if settings.GRADING_MODE == "group":
+                targets.append({
+                    "target_id": folder_name,
+                    "name": folder_name,
+                    "folder_path": folder_path,
+                    "total_score": 0,
+                    "grading_result": {},
+                    "individuals": []
+                })
+            else:
+                import re
+                student_id = ""
+                student_name = folder_name
+                project_name = folder_name
+                
+                # 尝试解析文件夹名称如 "124232023001_张三_保护环境"
+                match = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', folder_name)
+                if match:
+                    student_id = match.group(1)
+                    student_name = match.group(2)
+                    project_name = match.group(3) if match.group(3) else folder_name
+                
+                targets.append({
+                    "target_id": student_id if student_id else folder_name,
+                    "name": student_name,
+                    "project_name": project_name,
+                    "class_name": class_name,
+                    "folder_path": folder_path,
+                    "total_score": 0,
+                    "grading_result": {},
+                    "grading_time": ""
+                })
+        return targets
 
     try:
         with open(JSON_DATA_PATH, "r", encoding="utf-8") as f:
