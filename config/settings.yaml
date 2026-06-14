@@ -1,0 +1,31 @@
+# ==========================================
+# 大模型 API 调用高级配置文件
+# 注意：系统优先读取 .env 中的 LLM_PROVIDER 等配置。
+# 仅当 .env 未配置时，才会回退到读取本文件。
+# ==========================================
+
+# 指定当前使用哪个配置节点
+current_active_profile: "gemini"
+
+# ==========================================
+# 模型配置池 (Profiles)
+# ==========================================
+profiles:
+  # OpenAI 协议 (官方 或 第三方兼容接口如 Ollama / 代理站)
+  openai:
+    provider_type: "openai"
+    model_name: "gpt-4o"
+    api_key_env_var: "OPENAI_API_KEY"
+    network:
+      # 如果填写了 URL，就会使用该 URL 作为反向代理或第三方兼容服务地址
+      use_custom_url: false
+      custom_base_url: ""
+
+  # Gemini 协议 (官方 或 第三方代理接口)
+  gemini:
+    provider_type: "gemini"
+    model_name: "gemini-2.5-flash"
+    api_key_env_var: "GEMINI_API_KEY"
+    network:
+      use_custom_url: false
+      custom_base_url: ""
