@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>三维建模技术 - 小组作品评审</title>
+    <title>三维建模技术 - 作品评审</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -20,11 +20,11 @@
                 <div class="logo-icon">💠</div>
                 <div>
                     <h1>三维建模技术</h1>
-                    <p class="subtitle">2025-2026学年第一学期 - 小组作品评审</p>
+                    <p class="subtitle">2025-2026学年第一学期 - 作品评审</p>
                 </div>
             </div>
             <div class="stats-card">
-                <span class="stat-label">小组总数</span>
+                <span class="stat-label">作品总数</span>
                 <span class="stat-value" id="totalGroups">--</span>
             </div>
         </header>
@@ -33,7 +33,7 @@
         <div class="nav-tabs" style="display:flex; gap:20px; margin-bottom:20px;">
             <a href="/" class="nav-tab active"
                 style="padding:8px 16px; color:var(--accent); text-decoration:none; border-bottom:2px solid var(--accent);">📦
-                小组列表</a>
+                作品列表</a>
             <a href="/students" class="nav-tab"
                 style="padding:8px 16px; color:var(--text-secondary); text-decoration:none; border-bottom:2px solid transparent;">👤
                 学生列表</a>
@@ -46,7 +46,7 @@
                 <select id="sortSelect" onchange="applyFilters()">
                     <option value="score_desc">分数 (高→低)</option>
                     <option value="score_asc">分数 (低→高)</option>
-                    <option value="name_asc">组名 (A→Z)</option>
+                    <option value="name_asc">名称 (A→Z)</option>
                 </select>
             </div>
 
@@ -151,7 +151,7 @@
         function renderGroups(groups) {
             const container = document.getElementById('groupGrid');
             if (groups.length === 0) {
-                container.innerHTML = '<div class="empty">暂无符合条件的小组</div>';
+                container.innerHTML = '<div class="empty">暂无符合条件的作品</div>';
                 return;
             }
 
@@ -168,7 +168,7 @@
                             ${g.members.map(m => `<span class="member-tag">${m}</span>`).join('')}
                         </div>
                         <div class="card-footer">
-                            <span>${g.member_count} 名成员  <span class="poly-badge" title="模型面数">🎲 ${(g.poly_count / 10000).toFixed(1)}万面</span></span>
+                            <span>${g.member_count > 1 ? g.member_count + ' 名成员' : '个人作品'}  <span class="poly-badge" title="模型面数">🎲 ${(g.poly_count / 10000).toFixed(1)}万面</span></span>
                             <span class="arrow">→</span>
                         </div>
                     </div>
