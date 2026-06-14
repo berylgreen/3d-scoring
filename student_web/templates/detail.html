@@ -1,259 +1,615 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>作品详情 - 3D 评分管理系统</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .content-prose img { border-radius: 0.5rem; margin-top: 1rem; margin-bottom: 1rem; }
-        .content-prose table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-        .content-prose td, .content-prose th { border: 1px solid #e2e8f0; padding: 0.5rem; }
-    </style>
+    <title>小组详情</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
-<body class="text-slate-800 antialiased">
-    <div id="app" class="min-h-screen flex flex-col">
-        <!-- Header -->
-        {% raw %}
-        <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-4">
-                <a href="/" class="text-slate-500 hover:text-indigo-600 transition-colors p-2 rounded-full hover:bg-indigo-50">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                </a>
-                <div>
-                    <h1 class="text-xl font-bold tracking-tight text-slate-900" v-if="target">{{ target.name }}</h1>
-                    <div class="h-6 w-48 bg-slate-200 animate-pulse rounded" v-else></div>
+
+<body class="detail-page">
+    <div class="nav-bar">
+        <div class="nav-left">
+            <!-- 全局导航标签 -->
+            <div class="nav-tabs-inline" style="display:flex; gap:15px; margin-right:20px;">
+                <a href="/"
+                    style="color:var(--text-secondary); text-decoration:none; padding:4px 8px; border-radius:4px; transition:background 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.background='transparent'">📦 小组列表</a>
+                <a href="/students"
+                    style="color:var(--text-secondary); text-decoration:none; padding:4px 8px; border-radius:4px; transition:background 0.2s;"
+                    onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+                    onmouseout="this.style.background='transparent'">👤 学生列表</a>
+            </div>
+            <span style="color:var(--border-color); margin-right:15px;">|</span>
+            <button class="btn btn-nav" onclick="prevGroup()">上一组</button>
+            <button class="btn btn-nav" onclick="nextGroup()">下一组</button>
+        </div>
+    </div>
+
+    <div class="app-container detail-layout">
+        <!-- Sidebar / Top Info -->
+        <div class="info-sidebar">
+            <h1 id="groupName" class="detail-title">加载中...</h1>
+            <!-- 小标记区域 -->
+            <div id="tagBadges" class="tag-badges">
+                <span id="selfTopicTag" class="tag-badge tag-self-topic hidden" title="自主选题">⭐ 自主选题</span>
+                <span id="usesAiTag" class="tag-badge tag-uses-ai hidden" title="使用了AI工具">🤖 AI辅助</span>
+            </div>
+            <div class="score-display">
+                <span class="label">总分</span>
+                <span class="value" id="groupScore">--</span>
+                <div class="edit-actions">
+                    <span id="confirmedBadge" class="confirmed-badge hidden">✓ 已确认</span>
+                    <button id="editBtn" class="btn btn-primary btn-sm" onclick="toggleEdit()">编辑</button>
+                    <button id="saveBtn" class="btn btn-success btn-sm hidden" onclick="saveChanges()">保存</button>
+                    <button id="cancelBtn" class="btn btn-secondary btn-sm hidden" onclick="toggleEdit()">取消</button>
                 </div>
             </div>
-            
-            <div v-if="target" class="flex items-center space-x-3 bg-white px-4 py-1.5 rounded-full border border-slate-200 shadow-sm">
-                <span class="text-sm font-semibold text-slate-500">总分</span>
-                <span class="text-xl font-bold text-indigo-600">{{ target.total_score }}</span>
-            </div>
-        </header>
 
-        <main class="flex-grow p-6 lg:p-8 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <div v-if="loading" class="col-span-full flex justify-center items-center h-64">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+            <div class="score-display sub-stat"
+                style="margin-top: 10px; padding-top:10px; border-top: 1px dashed #eee;">
+                <span class="label">模型总面数</span>
+                <span class="value" id="polyCountDisplay" style="font-size: 1.5rem; color: #666;">--</span>
             </div>
 
-            <template v-else-if="target">
-                <!-- Left Column: Media & Content -->
-                <div class="lg:col-span-2 space-y-8">
-                    
-                    <!-- Media Section -->
-                    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h2 class="text-base font-semibold text-slate-800 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                作品展示
-                            </h2>
-                        </div>
-                        <div class="p-6">
-                            <!-- Animation Video -->
-                            <div v-if="course === 'animation' && media.video_url" class="aspect-video bg-black rounded-lg overflow-hidden shadow-inner">
-                                <video controls class="w-full h-full" :src="media.video_url"></video>
-                            </div>
-                            
-                            <!-- Modeling Images -->
-                            <div v-else-if="course === 'modeling' && media.effect_images && media.effect_images.length">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div v-for="(img, idx) in media.effect_images" :key="idx" class="aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200 cursor-pointer hover:border-indigo-400 transition-colors">
-                                        <img :src="img" class="w-full h-full object-cover" alt="Effect Image">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div v-else class="text-center py-12 text-slate-400 bg-slate-50 rounded-lg border border-dashed border-slate-200">
-                                未找到媒体文件
-                            </div>
-                        </div>
-                    </section>
+            <div class="score-breakdown" id="scoreDimensions">
+                <!-- Score radar/list -->
+            </div>
 
-                    <!-- Docx Content -->
-                    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h2 class="text-base font-semibold text-slate-800 flex items-center">
-                                <svg class="w-5 h-5 mr-2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                报告内容
-                            </h2>
-                        </div>
-                        <div class="p-6 content-prose text-sm max-h-[800px] overflow-y-auto" v-html="document_html"></div>
-                    </section>
+            <!-- Max Files Section (侧边栏版本) -->
+            <div id="maxFilesSection" class="sidebar-max-files hidden">
+                <h3>📦 3ds Max 源文件</h3>
+                <div id="maxFilesList" class="max-files-list">
+                    <!-- Max files list -->
                 </div>
+                <!-- 打开文件夹按钮 -->
+                <button id="openFolderBtn" class="btn btn-secondary sidebar-action-btn hidden" onclick="openFolder()">
+                    📂 打开文件夹
+                </button>
+            </div>
 
-                <!-- Right Column: Scores & Info -->
-                <div class="space-y-6">
-                    
-                    <!-- Score Details -->
-                    <section class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 bg-indigo-50/30">
-                            <h2 class="text-base font-semibold text-slate-800">评分详情</h2>
-                        </div>
-                        <div class="p-5">
-                            <div class="space-y-4">
-                                <div v-for="(val, key) in formatScores(getScores())" :key="key">
-                                    <div class="flex justify-between text-sm mb-1">
-                                        <span class="font-medium text-slate-600">{{ key }}</span>
-                                        <span class="text-slate-900 font-semibold">{{ val }} 分</span>
-                                    </div>
-                                    <div class="w-full bg-slate-100 rounded-full h-2">
-                                        <div class="bg-indigo-500 h-2 rounded-full" :style="{ width: Math.min((val / 25) * 100, 100) + '%' }"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Overall Comment -->
-                            <div class="mt-6 pt-5 border-t border-slate-100" v-if="getComment()">
-                                <h3 class="text-sm font-semibold text-slate-800 mb-2">综合评语</h3>
-                                <p class="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-100">{{ getComment() }}</p>
-                            </div>
-                        </div>
-                    </section>
+            <div class="group-comments">
+                <h3>评语</h3>
+                <p id="groupCommentsDisplay"></p>
+                <textarea id="groupCommentsInput" class="edit-input hidden" rows="5"></textarea>
+            </div>
+        </div>
 
-                    <!-- Group Individuals (If Mode == Group) -->
-                    <section v-if="mode === 'group' && target.individuals && target.individuals.length" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                        <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h2 class="text-base font-semibold text-slate-800">小组成员</h2>
-                        </div>
-                        <div class="divide-y divide-slate-100">
-                            <div v-for="ind in target.individuals" :key="ind.student_name" class="p-5">
-                                <div class="flex justify-between items-center mb-3">
-                                    <div class="flex items-center space-x-3">
-                                        <!-- Personal Image Avatar if available -->
-                                        <img v-if="media.personal_images && media.personal_images[ind.student_name]" 
-                                             :src="media.personal_images[ind.student_name]" 
-                                             class="w-10 h-10 rounded-full object-cover border border-slate-200">
-                                        <div v-else class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
-                                            {{ ind.student_name.charAt(0) }}
-                                        </div>
-                                        <div>
-                                            <h4 class="font-semibold text-slate-900">{{ ind.student_name }}</h4>
-                                            <p class="text-xs text-slate-500">{{ ind.role || '成员' }}</p>
-                                        </div>
-                                    </div>
-                                    <span class="text-lg font-bold text-indigo-600">{{ ind.individual_score }}</span>
-                                </div>
-                                <div class="text-sm text-slate-600 bg-slate-50 p-3 rounded mt-2">
-                                    <p class="font-medium mb-1">工作内容:</p>
-                                    <p class="text-slate-500 mb-2">{{ ind.task_description }}</p>
-                                    <p class="font-medium mb-1 border-t border-slate-200 pt-2">评价:</p>
-                                    <p class="text-slate-500">{{ ind.individual_comment }}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Max Files (Modeling) -->
-                    <section v-if="course === 'modeling' && media.max_files && media.max_files.length" class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                         <div class="p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h2 class="text-base font-semibold text-slate-800">源文件 (.max)</h2>
-                        </div>
-                        <ul class="divide-y divide-slate-100 max-h-48 overflow-y-auto">
-                            <li v-for="file in media.max_files" :key="file.name" class="p-3 flex justify-between items-center text-sm">
-                                <span class="truncate text-slate-600 max-w-[200px]" :title="file.name">{{ file.name }}</span>
-                                <span class="text-slate-400 text-xs whitespace-nowrap">{{ file.size }}</span>
-                            </li>
-                        </ul>
-                    </section>
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Effect Images Section (0-3) -->
+            <div id="effectImagesSection" class="section effect-images-section hidden">
+                <h2>作品效果图</h2>
+                <div id="effectImagesGrid" class="effect-images-grid">
+                    <!-- Effect images -->
                 </div>
-            </template>
-        </main>
-        {% endraw %}
+            </div>
+
+            <!-- Video Section -->
+            <div id="videoSection" class="section video-section hidden">
+                <h2>作品视频</h2>
+                <div class="video-wrapper">
+                    <video id="mainVideo" controls preload="metadata"></video>
+                </div>
+            </div>
+
+            <!-- Members Section -->
+            <div class="section members-section">
+                <h2>小组成员</h2>
+                <div id="membersGrid" class="members-grid">
+                    <!-- Member cards -->
+                </div>
+            </div>
+
+            <!-- Report Document Section -->
+            <div class="section doc-section">
+                <h2>作品报告</h2>
+                <div id="docContent" class="doc-viewer">
+                    <!-- HTML content from docx -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div id="lightbox" class="lightbox hidden">
+        <div class="lightbox-container" id="lightboxContainer">
+            <img id="lightboxImg" src="" alt="大图预览">
+        </div>
+        <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
+        <button class="lightbox-nav lightbox-prev" onclick="prevImage()">&lt;</button>
+        <button class="lightbox-nav lightbox-next" onclick="nextImage()">&gt;</button>
+        <div class="lightbox-hint">滚轮缩放 | 中键拖动 | ←→ 切换</div>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
     </div>
 
     <script>
-        const { createApp, ref, onMounted } = Vue;
+        const targetId = "{{ target_id }}";
+        let currentData = null;
+        let isEditing = false;
 
-        createApp({
-            setup() {
-                const target_id = '{{ target_id }}';
-                const mode = '{{ mode }}';
-                const course = '{{ course }}';
-                
-                const loading = ref(true);
-                const target = ref(null);
-                const document_html = ref('');
-                const media = ref({});
+        // Lightbox zoom/pan state
+        let lbScale = 1;
+        let lbTranslateX = 0;
+        let lbTranslateY = 0;
+        let isPanning = false;
+        let panStartX = 0;
+        let panStartY = 0;
 
-                onMounted(async () => {
-                    try {
-                        const res = await fetch(`/api/target/${encodeURIComponent(target_id)}`);
-                        const data = await res.json();
-                        if (data.success) {
-                            target.value = data.target;
-                            document_html.value = data.document_html;
-                            media.value = data.media;
-                        } else {
-                            alert("Failed to load details");
-                        }
-                    } catch (e) {
-                        console.error(e);
-                    } finally {
-                        loading.value = false;
+        // Gallery state
+        let allImages = [];
+        let currentImageIndex = 0;
+
+        // Group navigation state
+        let allGroups = [];
+        let currentGroupIndex = 0;
+
+        // 评分维度中英文映射和顺序
+        const SCORE_KEYS_ORDER = [
+            { key: 'theme_difficulty', label: '主题难度' },
+            { key: 'modeling_accuracy', label: '建模准确性与完成度' },
+            { key: 'topology', label: '拓扑结构合理' },
+            { key: 'materials_textures', label: '材质和贴图' },
+            { key: 'uv_mapping', label: '纹理映射 (UV)' },
+            { key: 'lighting_rendering', label: '光照渲染' },
+            { key: 'visual_quality', label: '整体视觉质量' },
+            { key: 'documentation', label: '文档整理' }
+        ];
+
+        // Load group list for navigation
+        async function loadGroupList() {
+            try {
+                const res = await fetch('/api/targets');
+                const data = await res.json();
+                allGroups = data.data.map(g => g.target_id);
+                currentGroupIndex = allGroups.indexOf(targetId);
+                if (currentGroupIndex === -1) currentGroupIndex = 0;
+            } catch (e) {
+                console.error('Failed to load group list', e);
+            }
+        }
+
+        function prevGroup() {
+            if (allGroups.length === 0) return;
+            currentGroupIndex = (currentGroupIndex - 1 + allGroups.length) % allGroups.length;
+            window.location.href = `/detail/${encodeURIComponent(allGroups[currentGroupIndex])}`;
+        }
+
+        function nextGroup() {
+            if (allGroups.length === 0) return;
+            currentGroupIndex = (currentGroupIndex + 1) % allGroups.length;
+            window.location.href = `/detail/${encodeURIComponent(allGroups[currentGroupIndex])}`;
+        }
+
+        async function openMaxFile(filePath) {
+            try {
+                const res = await fetch('/api/open-file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ file_path: filePath })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    console.log(data.message);
+                } else {
+                    alert('打开文件失败: ' + (data.error || '未知错误'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('打开文件失败');
+            }
+        }
+
+        async function openFolder() {
+            if (!currentData || !currentData.folder_path) return;
+            try {
+                const res = await fetch('/api/open-folder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ folder_path: currentData.folder_path })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    console.log(data.message);
+                } else {
+                    alert('打开文件夹失败: ' + (data.error || '未知错误'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('打开文件夹失败');
+            }
+        }
+
+        async function loadDetail() {
+            try {
+                const res = await fetch(`/api/target/${encodeURIComponent(targetId)}`);
+                if (!res.ok) throw new Error("Not found");
+                currentData = await res.json();
+                renderDetail(currentData);
+            } catch (e) {
+                console.error(e);
+                alert("加载小组数据失败");
+            }
+        }
+
+        function renderDetail(data) {
+            const target = data.target;
+            const info = target.grading_result?.group_info || target.grading_result || {};
+            currentData = { folder_path: target.folder_path }; // for openFolderBtn
+            
+            document.getElementById('groupName').innerText = target.name;
+            document.getElementById('groupScore').innerText = target.total_score;
+
+            // Poly Count
+            const pCount = info.poly_count || 0;
+            document.getElementById('polyCountDisplay').innerText = pCount.toLocaleString();
+
+            // 自主选题标签
+            const selfTopicTag = document.getElementById('selfTopicTag');
+            if (info.self_selected_topic) {
+                selfTopicTag.classList.remove('hidden');
+            } else {
+                selfTopicTag.classList.add('hidden');
+            }
+
+            // AI使用小标签
+            const usesAiTag = document.getElementById('usesAiTag');
+            if (info.uses_ai) {
+                usesAiTag.classList.remove('hidden');
+            } else {
+                usesAiTag.classList.add('hidden');
+            }
+
+            // 已确认标识
+            const confirmedBadge = document.getElementById('confirmedBadge');
+            if (info.confirmed === 1 || info.confirmed === true) {
+                confirmedBadge.classList.remove('hidden');
+            } else {
+                confirmedBadge.classList.add('hidden');
+            }
+
+            // Comments
+            document.getElementById('groupCommentsDisplay').innerText = info.comments || info.overallComment || '';
+            document.getElementById('groupCommentsInput').value = info.comments || info.overallComment || '';
+
+            // Render Score Dimensions in specified order
+            const scores = info.scores || {};
+            const dims = document.getElementById('scoreDimensions');
+            dims.innerHTML = SCORE_KEYS_ORDER.map(item => {
+                const v = scores[item.key] !== undefined ? scores[item.key] : 0;
+                return `
+                <div class="score-row">
+                    <span class="score-key">${item.label}</span>
+                    <span class="score-bar-bg">
+                        <span class="score-bar-fill" style="width: ${v * 10}%"></span>
+                    </span>
+                    <span class="score-val-display">${v}</span>
+                    <input type="number" class="score-input edit-input hidden" data-key="${item.key}" value="${v}" min="0" max="10">
+                </div>
+            `}).join('');
+
+            // Max Files & Folder Button
+            const maxSection = document.getElementById('maxFilesSection');
+            const maxList = document.getElementById('maxFilesList');
+            const folderBtn = document.getElementById('openFolderBtn');
+
+            let hasMaxFiles = data.media.max_files && data.media.max_files.length > 0;
+            let hasFolder = !!target.folder_path;
+
+            if (hasMaxFiles || hasFolder) {
+                maxSection.classList.remove('hidden');
+
+                // Render Max Files
+                if (hasMaxFiles) {
+                    maxList.innerHTML = data.media.max_files.map(f => `
+                        <div class="max-file-item">
+                            <div class="max-file-info">
+                                <span class="max-file-icon">📄</span>
+                                <span class="max-file-name">${f.name}</span>
+                                <span class="max-file-size">${f.size}</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="openMaxFile('${f.path.replace(/\\/g, '\\\\')}')">
+                                🚀 打开
+                            </button>
+                        </div>
+                    `).join('');
+                } else {
+                    maxList.innerHTML = '<div class="no-files-hint">无 .max 源文件</div>';
+                }
+
+                // Show/Hide Folder Button
+                if (hasFolder) {
+                    folderBtn.classList.remove('hidden');
+                } else {
+                    folderBtn.classList.add('hidden');
+                }
+
+            } else {
+                maxSection.classList.add('hidden');
+            }
+
+            // Effect Images (0-3)
+            if (data.media.effect_images && data.media.effect_images.length > 0) {
+                document.getElementById('effectImagesSection').classList.remove('hidden');
+                const effectGrid = document.getElementById('effectImagesGrid');
+                const labels = ['主参考图', '最终渲染', '线框检查', 'UV展开'];
+                effectGrid.innerHTML = data.media.effect_images.map((url, idx) => `
+                    <div class="effect-img-item" onclick="openLightbox('${url}')">
+                        <img src="${url}" alt="${labels[idx] || '效果图'}" loading="lazy">
+                        <span class="effect-label">${labels[idx] || ''}</span>
+                    </div>
+                `).join('');
+            }
+
+            // Video
+            if (data.media.video_url) {
+                document.getElementById('videoSection').classList.remove('hidden');
+                document.getElementById('mainVideo').src = data.media.video_url;
+            }
+
+            // Members
+            const membersContainer = document.getElementById('membersGrid');
+            const groupScore = info.total_group_score || target.total_score || 0;
+            membersContainer.innerHTML = (target.individuals || []).map((m, idx) => {
+                const imgUrl = data.media.personal_images ? data.media.personal_images[m.student_name] : null;
+                const totalScore = groupScore + (m.individual_score || 0);
+                return `
+                <div class="member-card" data-idx="${idx}" data-student-name="${m.student_name}">
+                    <div class="member-header">
+                        <div class="member-name">${m.student_name} <span class="total-score-badge">${totalScore}分</span></div>
+                        <div class="member-score">
+                            <span class="val-display">个人: ${m.individual_score || 0} 分</span>
+                            <input type="number" class="member-score-input edit-input hidden" value="${m.individual_score || 0}" min="0" max="20">
+                        </div>
+                    </div>
+                    ${imgUrl ? `<div class="member-img-box" onclick="openLightbox('${imgUrl}')"><img src="${imgUrl}" alt="${m.student_name}" loading="lazy"><span class="zoom-hint">🔍</span></div>` : ''}
+                    <div class="member-role">${m.task_description || m.role || '成员'}</div>
+                    <div class="member-comment">
+                        <p class="val-display">${m.individual_comment || ''}</p>
+                        <textarea class="member-comment-input edit-input hidden" rows="3">${m.individual_comment || ''}</textarea>
+                    </div>
+                </div>
+            `}).join('');
+
+            // Document
+            document.getElementById('docContent').innerHTML = data.document_html;
+
+            // Build gallery array for navigation
+            allImages = [];
+            // Add effect images
+            if (data.media.effect_images) {
+                allImages = allImages.concat(data.media.effect_images);
+            }
+            // Add personal images
+            if (data.media.personal_images) {
+                allImages = allImages.concat(Object.values(data.media.personal_images));
+            }
+        }
+
+        function openLightbox(src) {
+            // Reset zoom/pan state
+            lbScale = 1;
+            lbTranslateX = 0;
+            lbTranslateY = 0;
+            updateLightboxTransform();
+
+            // Find current index in gallery
+            currentImageIndex = allImages.indexOf(src);
+            if (currentImageIndex === -1) currentImageIndex = 0;
+
+            document.getElementById('lightboxImg').src = src;
+            document.getElementById('lightbox').classList.remove('hidden');
+            updateCounter();
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.add('hidden');
+        }
+
+        function prevImage() {
+            if (allImages.length === 0) return;
+            currentImageIndex = (currentImageIndex - 1 + allImages.length) % allImages.length;
+            showCurrentImage();
+        }
+
+        function nextImage() {
+            if (allImages.length === 0) return;
+            currentImageIndex = (currentImageIndex + 1) % allImages.length;
+            showCurrentImage();
+        }
+
+        function showCurrentImage() {
+            lbScale = 1;
+            lbTranslateX = 0;
+            lbTranslateY = 0;
+            updateLightboxTransform();
+            document.getElementById('lightboxImg').src = allImages[currentImageIndex];
+            updateCounter();
+        }
+
+        function updateCounter() {
+            if (allImages.length > 0) {
+                document.getElementById('lightboxCounter').innerText = `${currentImageIndex + 1} / ${allImages.length}`;
+            }
+        }
+
+        function updateLightboxTransform() {
+            const img = document.getElementById('lightboxImg');
+            img.style.transform = `translate(${lbTranslateX}px, ${lbTranslateY}px) scale(${lbScale})`;
+        }
+
+        // Lightbox event handlers
+        document.addEventListener('DOMContentLoaded', () => {
+            const lightbox = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImg');
+
+            // Scroll wheel zoom
+            lightbox.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                lbScale = Math.max(0.5, Math.min(5, lbScale + delta));
+                updateLightboxTransform();
+            });
+
+            // Middle mouse button pan
+            lightbox.addEventListener('mousedown', (e) => {
+                if (e.button === 1) { // Middle button
+                    e.preventDefault();
+                    isPanning = true;
+                    panStartX = e.clientX - lbTranslateX;
+                    panStartY = e.clientY - lbTranslateY;
+                    lightbox.style.cursor = 'grabbing';
+                }
+            });
+
+            lightbox.addEventListener('mousemove', (e) => {
+                if (isPanning) {
+                    lbTranslateX = e.clientX - panStartX;
+                    lbTranslateY = e.clientY - panStartY;
+                    updateLightboxTransform();
+                }
+            });
+
+            lightbox.addEventListener('mouseup', (e) => {
+                if (e.button === 1) {
+                    isPanning = false;
+                    lightbox.style.cursor = 'zoom-out';
+                }
+            });
+
+            lightbox.addEventListener('mouseleave', () => {
+                isPanning = false;
+                lightbox.style.cursor = 'zoom-out';
+            });
+
+            // Click to close (also on image if not zoomed)
+            lightbox.addEventListener('click', (e) => {
+                if ((e.target === lightbox || e.target === img) && lbScale <= 1) {
+                    closeLightbox();
+                }
+            });
+
+            // Prevent context menu on middle click
+            lightbox.addEventListener('auxclick', (e) => {
+                if (e.button === 1) e.preventDefault();
+            });
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (!lightbox.classList.contains('hidden')) {
+                    if (e.key === 'ArrowLeft') {
+                        prevImage();
+                    } else if (e.key === 'ArrowRight') {
+                        nextImage();
+                    } else if (e.key === 'Escape') {
+                        closeLightbox();
                     }
+                }
+            });
+        });
+
+        function toggleEdit() {
+            isEditing = !isEditing;
+            const displayEls = document.querySelectorAll('.val-display, .score-val-display, #groupCommentsDisplay');
+            const inputEls = document.querySelectorAll('.edit-input');
+
+            document.getElementById('editBtn').classList.toggle('hidden', isEditing);
+            document.getElementById('saveBtn').classList.toggle('hidden', !isEditing);
+            document.getElementById('cancelBtn').classList.toggle('hidden', !isEditing);
+
+            if (isEditing) {
+                displayEls.forEach(el => el.classList.add('hidden'));
+                inputEls.forEach(el => el.classList.remove('hidden'));
+            } else {
+                displayEls.forEach(el => el.classList.remove('hidden'));
+                inputEls.forEach(el => el.classList.add('hidden'));
+                // Reset values if cancelling
+                renderDetail(currentData);
+            }
+        }
+
+        async function saveChanges() {
+            const formData = {
+                group_info: {
+                    scores: {},
+                    comments: document.getElementById('groupCommentsInput').value
+                },
+                individuals: []
+            };
+
+            // Gather Group Scores and Calculate New Total
+            let dimSum = 0;
+            document.querySelectorAll('.score-input').forEach(input => {
+                const key = input.dataset.key;
+                const val = parseInt(input.value) || 0;
+                formData.group_info.scores[key] = val;
+                dimSum += val;
+            });
+
+            // Auto-update total score based on sum
+            formData.group_info.total_group_score = dimSum;
+
+            // Gather Individual Data
+            const memberCards = document.querySelectorAll('.member-card');
+            memberCards.forEach(card => {
+                const name = card.dataset.studentName;
+                const score = parseInt(card.querySelector('.member-score-input').value) || 0;
+                const comment = card.querySelector('.member-comment-input').value;
+
+                formData.individuals.push({
+                    student_name: name,
+                    individual_score: score,
+                    individual_comment: comment
+                });
+            });
+
+            try {
+                const res = await fetch(`/api/target/${encodeURIComponent(targetId)}/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
                 });
 
-                const getScores = () => {
-                    if (!target.value) return {};
-                    if (mode === 'group') {
-                        return target.value.grading_result?.group_info?.scores || {};
-                    } else {
-                        return target.value.grading_result?.scores || {};
-                    }
-                };
+                if (res.ok) {
+                    // Update UI state to non-editing
+                    isEditing = false;
+                    document.getElementById('editBtn').classList.remove('hidden');
+                    document.getElementById('saveBtn').classList.add('hidden');
+                    document.getElementById('cancelBtn').classList.add('hidden');
 
-                const getComment = () => {
-                    if (!target.value) return '';
-                    if (mode === 'group') {
-                        return target.value.grading_result?.group_info?.comments || '';
-                    } else {
-                        return target.value.grading_result?.overallComment || '';
-                    }
-                };
-
-                const formatScores = (scoresObj) => {
-                    const dict = {
-                        "theme": "主题思想",
-                        "character_animation": "角色动画",
-                        "scene_camera": "场景镜头",
-                        "material_lighting": "材质光影",
-                        "render_postprocess": "渲染后期",
-                        "documentation": "文档整理",
-                        "theme_difficulty": "主题难度",
-                        "modeling_accuracy": "建模准确度",
-                        "topology": "拓扑结构",
-                        "materials_textures": "材质贴图",
-                        "uv_mapping": "UV映射",
-                        "lighting_rendering": "光照渲染",
-                        "visual_quality": "视觉质量",
-                        "modeling": "建模水平",
-                        "texture": "材质贴图",
-                        "render": "渲染水平"
-                    };
-                    const res = {};
-                    for (const [k, v] of Object.entries(scoresObj)) {
-                        res[dict[k] || k] = v;
-                    }
-                    return res;
-                };
-
-                return {
-                    mode, course, target, loading, document_html, media,
-                    getScores, getComment, formatScores
-                };
+                    loadDetail(); // Reload to refresh view with new data
+                } else {
+                    alert("保存失败");
+                }
+            } catch (e) {
+                console.error(e);
+                alert("保存失败");
             }
-        }).mount('#app');
+        }
+
+        // Back to Top Logic
+        const topBtn = document.createElement('button');
+        topBtn.className = 'back-to-top-btn';
+        topBtn.innerHTML = '↑';
+        topBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.body.appendChild(topBtn);
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                topBtn.classList.add('visible');
+            } else {
+                topBtn.classList.remove('visible');
+            }
+        });
+
+        loadDetail();
+        loadGroupList();
     </script>
 </body>
+
 </html>

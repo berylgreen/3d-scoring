@@ -7,6 +7,7 @@ import sys
 import os
 import json
 import base64
+import re
 from pathlib import Path
 
 # Add project root to sys.path
@@ -55,6 +56,63 @@ def detail(target_id):
                           target_id=target_id,
                           mode=settings.GRADING_MODE, 
                           course=settings.COURSE_TYPE)
+
+@app.route('/students')
+def students():
+    """学生列表页"""
+    return render_template('students.html', mode=settings.GRADING_MODE, course=settings.COURSE_TYPE)
+
+@app.route('/api/students')
+def api_students():
+    """获取所有学生及其成绩（兼容旧UI）"""
+    targets = load_all_targets()
+    students_list = []
+    
+    for t in targets:
+        group_score = t.get("total_score", 0)
+        inds = t.get("individuals", [])
+        if not inds:
+            # If no individuals defined, treat target as individual
+            students_list.append({
+                "student_name": t.get("name", "Unknown"),
+                "student_id": "N/A",
+                "group_name": t.get("name", "Unknown"),
+                "group_score": group_score,
+                "individual_score": 0,
+                "total_score": group_score
+            })
+            continue
+            
+        for ind in inds:
+            ind_score = ind.get("individual_score", 0)
+            students_list.append({
+                "student_name": ind.get("student_name", "Unknown"),
+                "student_id": ind.get("student_id", "N/A"),
+                "group_name": t.get("name", "Unknown"),
+                "group_score": group_score,
+                "individual_score": ind_score,
+                "total_score": group_score + ind_score
+            })
+            
+    # Default sort
+    students_list.sort(key=lambda x: x["total_score"], reverse=True)
+    return jsonify({"students": students_list, "total": len(students_list)})
+
+@app.route('/api/open-folder', methods=['POST'])
+def open_folder():
+    path = request.json.get('folder_path')
+    if path and os.path.exists(path):
+        os.startfile(path)
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "Folder not found"}), 404
+
+@app.route('/api/open-file', methods=['POST'])
+def open_file():
+    path = request.json.get('file_path')
+    if path and os.path.exists(path):
+        os.startfile(path)
+        return jsonify({"success": True})
+    return jsonify({"success": False, "error": "File not found"}), 404
 
 @app.route('/api/target/<path:target_id>')
 def api_target_detail(target_id):

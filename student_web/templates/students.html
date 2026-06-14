@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生列表 - 三维建模技术</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        /* 学生列表专用样式 */
+        .student-table-wrapper {
+            overflow-x: auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+        }
+
+        .student-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        .student-table th,
+        .student-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .student-table th {
+            background: rgba(255, 255, 255, 0.05);
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            user-select: none;
+        }
+
+        .student-table th:hover {
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .student-table th.active {
+            color: var(--accent);
+        }
+
+        .student-table th .sort-icon {
+            margin-left: 6px;
+            opacity: 0.5;
+        }
+
+        .student-table th.active .sort-icon {
+            opacity: 1;
+        }
+
+        .student-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .student-table tbody tr:hover {
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .student-table .rank-cell {
+            color: var(--text-secondary);
+            font-family: monospace;
+            width: 50px;
+        }
+
+        .student-table .id-cell {
+            font-family: monospace;
+            color: var(--text-secondary);
+        }
+
+        .student-table .name-cell {
+            font-weight: 500;
+        }
+
+        .student-table .score-cell {
+            font-weight: 700;
+        }
+
+        .student-table .score-high {
+            color: #238636;
+        }
+
+        .student-table .score-mid {
+            color: var(--accent);
+        }
+
+        .student-table .score-low {
+            color: #f85149;
+        }
+
+        .student-table .group-link {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .student-table .group-link:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        .student-table .confirmed-badge-small {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--success);
+            color: #fff;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            margin-left: 6px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border-bottom: 2px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .search-box {
+            margin-bottom: 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px 16px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="main-header">
+            <div class="logo-section">
+                <div class="logo-icon">💠</div>
+                <div>
+                    <h1>三维建模技术</h1>
+                    <p class="subtitle">2025-2026学年第一学期 - 学生成绩列表</p>
+                </div>
+            </div>
+            <div class="stats-card">
+                <span class="stat-label">学生总数</span>
+                <span class="stat-value" id="totalStudents">--</span>
+            </div>
+        </header>
+
+        <!-- 导航标签 -->
+        <div class="nav-tabs">
+            <a href="/" class="nav-tab">📦 小组列表</a>
+            <a href="/students" class="nav-tab active">👤 学生列表</a>
+        </div>
+
+        <!-- 搜索框 -->
+        <div class="search-box">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索学号或姓名...">
+        </div>
+
+        <main class="content-area">
+            <div class="student-table-wrapper">
+                <table class="student-table">
+                    <thead>
+                        <tr>
+                            <th class="rank-header">#</th>
+                            <th data-sort="id_asc" class="sortable">学号 <span class="sort-icon">↕</span></th>
+                            <th data-sort="name_asc" class="sortable">姓名 <span class="sort-icon">↕</span></th>
+                            <th data-sort="score_desc" class="sortable active">个人成绩 <span class="sort-icon">↓</span>
+                            </th>
+                            <th>所属小组</th>
+                            <th data-sort="group_score_desc" class="sortable">小组成绩 <span class="sort-icon">↕</span></th>
+                            <th data-sort="total_desc" class="sortable">总成绩 <span class="sort-icon">↕</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px;">
+                                <div class="spinner"></div>
+                                <p>正在加载学生数据...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let allStudents = [];
+        let currentSort = 'score_desc';
+
+        async function loadStudents(sort = 'score_desc') {
+            try {
+                const res = await fetch(`/api/students?sort=${sort}`);
+                const data = await res.json();
+                allStudents = data.students;
+                document.getElementById('totalStudents').innerText = data.total;
+                currentSort = sort;
+
+                // 更新表头排序状态
+                updateSortHeaders(sort);
+
+                // 渲染表格
+                renderTable(allStudents);
+            } catch (e) {
+                console.error(e);
+                document.getElementById('studentTableBody').innerHTML =
+                    '<tr><td colspan="6" class="error">加载失败</td></tr>';
+            }
+        }
+
+        function updateSortHeaders(sort) {
+            document.querySelectorAll('.student-table th.sortable').forEach(th => {
+                th.classList.remove('active');
+                th.querySelector('.sort-icon').textContent = '↕';
+            });
+
+            const activeHeader = document.querySelector(`th[data-sort="${sort}"]`);
+            if (activeHeader) {
+                activeHeader.classList.add('active');
+                if (sort.includes('desc')) {
+                    activeHeader.querySelector('.sort-icon').textContent = '↓';
+                } else {
+                    activeHeader.querySelector('.sort-icon').textContent = '↑';
+                }
+            }
+        }
+
+        function getScoreClass(score) {
+            if (score >= 90) return 'score-high';
+            if (score >= 60) return 'score-mid';
+            return 'score-low';
+        }
+
+        function renderTable(students) {
+            const tbody = document.getElementById('studentTableBody');
+
+            if (students.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:40px;">暂无符合条件的学生</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = students.map((s, idx) => {
+                const totalScore = (s.individual_score || 0) + (s.group_score || 0);
+                return `
+                <tr>
+                    <td class="rank-cell">${idx + 1}</td>
+                    <td class="id-cell">${s.student_id || '-'}</td>
+                    <td class="name-cell">${s.student_name}${s.confirmed ? '<span class="confirmed-badge-small" title="成绩已确认">✓</span>' : ''}</td>
+                    <td class="score-cell ${getScoreClass(s.individual_score)}">${s.individual_score || 0}</td>
+                    <td><a href="/group/${encodeURIComponent(s.group_name)}" class="group-link">${s.group_name}</a></td>
+                    <td class="score-cell">${s.group_score || 0}</td>
+                    <td class="score-cell ${getScoreClass(totalScore / 2)}" style="font-weight:700;">${totalScore}</td>
+                </tr>
+            `}).join('');
+        }
+
+        // 排序点击处理
+        document.querySelectorAll('.student-table th.sortable').forEach(th => {
+            th.addEventListener('click', () => {
+                let sort = th.dataset.sort;
+
+                // 切换升序/降序
+                if (currentSort === sort) {
+                    if (sort.includes('_asc')) {
+                        sort = sort.replace('_asc', '_desc');
+                    } else {
+                        sort = sort.replace('_desc', '_asc');
+                    }
+                }
+
+                loadStudents(sort);
+            });
+        });
+
+        // 搜索功能
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+
+            if (!query) {
+                renderTable(allStudents);
+                return;
+            }
+
+            const filtered = allStudents.filter(s =>
+                (s.student_id && s.student_id.toLowerCase().includes(query)) ||
+                (s.student_name && s.student_name.toLowerCase().includes(query))
+            );
+
+            renderTable(filtered);
+        });
+
+        // Back to Top
+        const topBtn = document.createElement('button');
+        topBtn.className = 'back-to-top-btn';
+        topBtn.innerHTML = '↑';
+        topBtn.onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+        document.body.appendChild(topBtn);
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                topBtn.classList.add('visible');
+            } else {
+                topBtn.classList.remove('visible');
+            }
+        });
+
+        // 初始化加载
+        loadStudents();
+    </script>
+</body>
+
+</html>
