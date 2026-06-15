@@ -86,7 +86,7 @@ def api_students():
             parsed_id = "N/A"
             parsed_name = raw_group_name
             display_group_name = raw_group_name
-            match = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_group_name)
+            match = re.match(r'^(\d+)[_\-\s—]*([\u4e00-\u9fa5A-Za-z]+)[_\-\s—]*(.*)$', raw_group_name)
             if match:
                 parsed_id = match.group(1)
                 parsed_name = match.group(2)
@@ -115,7 +115,7 @@ def api_students():
             display_group_name = raw_group_name
             
             # Try parsing the student name first
-            match = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_student_name)
+            match = re.match(r'^(\d+)[_\-\s—]*([\u4e00-\u9fa5A-Za-z]+)[_\-\s—]*(.*)$', raw_student_name)
             if match:
                 parsed_id = match.group(1)
                 parsed_name = match.group(2)
@@ -124,7 +124,7 @@ def api_students():
                     display_group_name = match.group(3)
             elif parsed_id == "N/A" or not parsed_id:
                 # Fallback to parsing group name
-                match2 = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_group_name)
+                match2 = re.match(r'^(\d+)[_\-\s—]*([\u4e00-\u9fa5A-Za-z]+)[_\-\s—]*(.*)$', raw_group_name)
                 if match2:
                     parsed_id = match2.group(1)
                     if parsed_name == raw_student_name:
@@ -134,7 +134,7 @@ def api_students():
                         
             # Another fallback: if raw_group_name has the pattern but raw_student_name didn't match
             if display_group_name == raw_group_name:
-                match3 = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_group_name)
+                match3 = re.match(r'^(\d+)[_\-\s—]*([\u4e00-\u9fa5A-Za-z]+)[_\-\s—]*(.*)$', raw_group_name)
                 if match3 and match3.group(3):
                     display_group_name = match3.group(3)
                         
