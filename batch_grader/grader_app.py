@@ -39,10 +39,12 @@ def extract_names_from_string(text):
 
 def get_file_structure(directory):
     files = []
-    for root, _, filenames in os.walk(directory):
-        for filename in filenames:
-            rel_path = os.path.relpath(os.path.join(root, filename), directory)
-            files.append(rel_path)
+    try:
+        for filename in os.listdir(directory):
+            if os.path.isfile(os.path.join(directory, filename)):
+                files.append(filename)
+    except Exception:
+        pass
     return files
 
 class Evaluator:
@@ -249,10 +251,7 @@ def run_batch():
     # Processed names
     processed_names = set()
     for item in results:
-        info = item.get("group_info", {}) or item.get("student_info", {}) or item
-        name = info.get("name", "")
-        if not name: 
-            name = info.get("folder_name", "")
+        name = item.get("group_info", {}).get("group_name")
         if name:
             processed_names.add(name)
 

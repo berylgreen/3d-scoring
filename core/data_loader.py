@@ -101,29 +101,29 @@ def collect_targets_from_disk() -> List[Dict]:
     targets = []
     works_root = str(STUDENT_DIR_BASE)
     
+    # 因为 config.py 中已经配置 WORKS_ROOT_DIR 为 DATA_DIR / "作品"
+    # 如果该目录不存在，说明根目录下没有“作品”文件夹
     if not os.path.isdir(works_root):
+        print(f"⚠️ 提示: 未找到名为 '作品' 的文件夹 ({works_root})，将不扫描任何数据。")
         return targets
 
-    for class_dir in os.listdir(works_root):
-        class_path = os.path.join(works_root, class_dir)
-        if not os.path.isdir(class_path):
+    for folder in os.listdir(works_root):
+        folder_stripped = folder.strip()
+        student_path = os.path.join(works_root, folder_stripped)
+        
+        if not os.path.isdir(student_path):
             continue
             
-        # 忽略系统文件夹
-        if class_dir in ("result", "thumbnail_cache", "batch_grader", "core", "student_web", "__pycache__", ".vscode", ".git", "config", "providers", "utils"):
+        # 忽略系统文件夹和无关文件夹
+        if folder_stripped in ("result", "thumbnail_cache", "batch_grader", "core", "student_web", "__pycache__", ".vscode", ".git", "config", "providers", "utils"):
             continue
+            
+        targets.append({
+            "class_name": "作品",
+            "folder_path": student_path,
+            "folder_name": folder_stripped
+        })
         
-        for folder in os.listdir(class_path):
-            folder_stripped = folder.strip()
-            student_path = os.path.join(class_path, folder_stripped)
-            if not os.path.isdir(student_path):
-                continue
-                
-            targets.append({
-                "class_name": class_dir,
-                "folder_path": student_path,
-                "folder_name": folder_stripped
-            })
     return targets
 
 def get_target_by_id(target_id: str) -> Optional[Dict]:
