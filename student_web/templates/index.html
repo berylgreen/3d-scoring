@@ -164,14 +164,7 @@
                             <div class="rank">#${idx + 1}${g.self_selected_topic ? '<span class="self-topic-badge" title="自主选题">⭐</span>' : ''}${g.uses_ai ? '<span class="ai-mini-badge" title="使用了AI">🤖</span>' : ''}${g.confirmed ? '<span class="confirmed-mini-badge" title="成绩已确认">✓</span>' : ''}</div>
                             <div class="score-badge">${g.total_score} 分</div>
                         </div>
-                        <h3 class="group-name">${g.group_name}</h3>
-                        <div class="members-list">
-                            ${g.members.map(m => `<span class="member-tag">${m}</span>`).join('')}
-                        </div>
-                        <div class="card-footer">
-                            <span>${g.member_count > 1 ? g.member_count + ' 名成员' : '个人作品'} ${COURSE_TYPE !== 'animation' ? ` <span class="poly-badge" title="模型面数">🎲 ${(g.poly_count / 10000).toFixed(1)}万面</span>` : ''}</span>
-                            <span class="arrow">→</span>
-                        </div>
+                        <h3 class="group-name" title="${g.group_name}" style="margin-bottom: 0;">${g.group_name}</h3>
                     </div>
                 </div>
             `).join('');

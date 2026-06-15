@@ -89,21 +89,23 @@ body {
     border-radius: 12px;
     overflow: hidden;
     cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
 }
 
 .group-card:hover {
     transform: translateY(-4px);
     border-color: var(--accent);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 }
 
 .card-thumbnail {
-    width: 180px;
-    min-height: 140px;
+    width: 100%;
+    aspect-ratio: 16/10;
     flex-shrink: 0;
     overflow: hidden;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .card-thumbnail img {
@@ -179,9 +181,14 @@ body {
 
 .group-name {
     font-size: 1.1rem;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     color: #fff;
     line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .members-list {
@@ -202,9 +209,10 @@ body {
 .card-footer {
     border-top: 1px solid var(--border-color);
     margin-top: 15px;
-    padding-top: 10px;
+    padding-top: 12px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     color: var(--text-secondary);
     font-size: 0.85rem;
 }
