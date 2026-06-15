@@ -47,6 +47,7 @@ ANIMATION_INDIVIDUAL_PROMPT = """
     }},
     "individuals": [
         {{
+            "student_id": "提取学号(如有，否则填N/A)",
             "student_name": "{target_name}",
             "task_description": "提取其参与的工作内容",
             "individual_score": 0,
@@ -102,6 +103,7 @@ ANIMATION_GROUP_PROMPT = """
     }},
     "individuals": [
         {{
+            "student_id": "提取学号(如有，否则填N/A)",
             "student_name": "姓名",
             "task_description": "该成员的具体工作内容",
             "individual_score": 0,
@@ -155,6 +157,7 @@ MODELING_INDIVIDUAL_PROMPT = """
     }},
     "individuals": [
         {{
+            "student_id": "提取学号(如有，否则填N/A)",
             "student_name": "未知姓名",
             "task_description": "该学生的核心工作量概述（基于文档）",
             "individual_score": 0,
@@ -212,6 +215,7 @@ MODELING_GROUP_PROMPT = """
     }},
     "individuals": [
         {{
+            "student_id": "提取学号(如有，否则填N/A)",
             "student_name": "姓名",
             "task_description": "该成员的具体工作内容",
             "individual_score": 0,

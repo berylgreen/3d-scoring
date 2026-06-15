@@ -124,6 +124,7 @@ class Evaluator:
                         "items": {
                             "type": "object",
                             "properties": {
+                                "student_id": {"type": "string"},
                                 "student_name": {"type": "string"},
                                 "task_description": {"type": "string"},
                                 "individual_score": {"type": "integer"},
@@ -200,6 +201,7 @@ class Evaluator:
                     "items": {
                         "type": "object",
                         "properties": {
+                            "student_id": {"type": "string"},
                             "student_name": {"type": "string"},
                             "task_description": {"type": "string"},
                             "individual_score": {"type": "integer"},
