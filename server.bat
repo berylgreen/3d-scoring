@@ -41,9 +41,12 @@ echo [STOP] Finding process on port 5000...
 set found=0
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do (
     echo [KILL] Terminating PID: %%a ...
-    taskkill /F /PID %%a
+    taskkill /F /PID %%a >nul 2>&1
     set found=1
 )
+:: 强制清理可能残留的 app.py 进程，防止端口被子进程占用导致关闭失败
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^pythonw?\.exe$' -and $_.CommandLine -match 'app\.py' } | Invoke-CimMethod -MethodName Terminate" >nul 2>&1
+
 if "%found%"=="0" (
     echo [INFO] No server found on port 5000.
 ) else (
@@ -57,7 +60,8 @@ echo [RESTART] Stopping current server...
 for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>&1
 )
-timeout /t 1 >nul
+powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^pythonw?\.exe$' -and $_.CommandLine -match 'app\.py' } | Invoke-CimMethod -MethodName Terminate" >nul 2>&1
+ping 127.0.0.1 -n 2 >nul
 echo [START] Starting new server (Hidden Console)...
 start "" pythonw student_web\app.py
 echo [SUCCESS] Server restarted!
