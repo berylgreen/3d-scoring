@@ -187,7 +187,11 @@ def api_thumbnail(target_id):
                     cap.release()
                     
                     if ret:
-                        cv2.imwrite(cached_thumb, frame)
+                        # 解决 OpenCV 在 Windows 下写入中文路径失败的问题
+                        is_success, buffer = cv2.imencode(".jpg", frame)
+                        if is_success:
+                            with open(cached_thumb, "wb") as f:
+                                f.write(buffer)
                         return send_file(cached_thumb)
                 except Exception as e:
                     print(f"提取视频帧失败 {video_path}: {e}")
