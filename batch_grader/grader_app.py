@@ -275,6 +275,12 @@ def run_batch():
         except Exception as e:
             print(f"Error processing {target['folder_name']}: {e}")
             traceback.print_exc()
+            
+        # 基础延时，避免触发限流
+        if settings.API_DELAY_SECONDS > 0:
+            import time
+            print(f"  [延时] 休息 {settings.API_DELAY_SECONDS} 秒，以满足 API 限流要求...")
+            time.sleep(settings.API_DELAY_SECONDS)
 
 if __name__ == "__main__":
     run_batch()

@@ -64,6 +64,7 @@ class Settings:
         # 评分行为配置
         # =====================
         self.ENABLE_LLM_GRADING = os.getenv("ENABLE_LLM_GRADING", "true").lower() == "true"
+        self.API_DELAY_SECONDS = int(os.getenv("API_DELAY_SECONDS", "12"))
 
         # 视频文件配置 (主要用于动画)
         self.VIDEO_EXTENSIONS = [".mkv", ".mp4", ".mov", ".avi"]

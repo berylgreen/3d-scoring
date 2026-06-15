@@ -113,22 +113,33 @@ class OpenAIProvider(BaseLLM):
         if files:
             print("  [警告] 当前配置的 OpenAI 提供商尚未实现本地视频文件直接上传，视频评分将可能受限！")
             
-        try:
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=messages,
-                response_format={"type": "json_object"}
-            )
-            content = response.choices[0].message.content or ""
-            # 提取 JSON 内容（寻找第一个 { 和最后一个 }）
-            start_idx = content.find('{')
-            end_idx = content.rfind('}')
-            if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
-                content = content[start_idx:end_idx+1]
-            
-            return json.loads(content)
-        except Exception as e:
-            raise RuntimeError(f"OpenAI API 结构化调用失败: {e}") from e
+        import time
+        max_retries = 3
+        base_delay = 5
+        
+        for attempt in range(max_retries + 1):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model_name,
+                    messages=messages,
+                    response_format={"type": "json_object"}
+                )
+                content = response.choices[0].message.content or ""
+                # 提取 JSON 内容（寻找第一个 { 和最后一个 }）
+                start_idx = content.find('{')
+                end_idx = content.rfind('}')
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    content = content[start_idx:end_idx+1]
+                
+                return json.loads(content)
+            except Exception as e:
+                error_msg = str(e).lower()
+                if ("429" in error_msg or "rate limit" in error_msg) and attempt < max_retries:
+                    delay = base_delay * (2 ** attempt)
+                    print(f"  [重试] 遇到 429 频率限制，等待 {delay} 秒后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                    time.sleep(delay)
+                    continue
+                raise RuntimeError(f"OpenAI API 结构化调用失败: {e}") from e
 
     def upload_file(self, file_path: str):
         """上传文件（占位符，OpenAI Chat 不原生支持文件）"""
