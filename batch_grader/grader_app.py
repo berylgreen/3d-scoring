@@ -261,11 +261,10 @@ def run_batch():
     # Processed names
     processed_names = set()
     for item in results:
-        if settings.GRADING_MODE == "group":
-            name = item.get("group_info", {}).get("group_name", "")
-        else:
-            name = item.get("student_info", {}).get("name", "")
-            if not name: name = item.get("student_info", {}).get("folder_name", "")
+        info = item.get("group_info", {}) or item.get("student_info", {}) or item
+        name = info.get("name", "")
+        if not name: 
+            name = info.get("folder_name", "")
         if name:
             processed_names.add(name)
 
