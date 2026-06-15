@@ -68,30 +68,85 @@ def api_students():
     targets = load_all_targets()
     students_list = []
     
+    import re
+    
     for t in targets:
         group_score = t.get("total_score", 0)
+        target_id = t.get("target_id", "")
+        raw_group_name = t.get("name", "Unknown")
+        confirmed = False
+        
+        info = t.get("grading_result", {}).get("group_info") or t.get("grading_result", {}).get("student_info") or t.get("grading_result", {})
+        if isinstance(info, dict):
+            confirmed = info.get("confirmed", False)
+            
         inds = t.get("individuals", [])
         if not inds:
             # If no individuals defined, treat target as individual
+            parsed_id = "N/A"
+            parsed_name = raw_group_name
+            display_group_name = raw_group_name
+            match = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_group_name)
+            if match:
+                parsed_id = match.group(1)
+                parsed_name = match.group(2)
+                if match.group(3):
+                    display_group_name = match.group(3)
+                
             students_list.append({
-                "student_name": t.get("name", "Unknown"),
-                "student_id": "N/A",
-                "group_name": t.get("name", "Unknown"),
+                "student_name": parsed_name,
+                "student_id": parsed_id,
+                "group_name": display_group_name,
+                "target_id": target_id,
                 "group_score": group_score,
                 "individual_score": 0,
-                "total_score": group_score
+                "total_score": group_score,
+                "confirmed": confirmed
             })
             continue
             
         for ind in inds:
             ind_score = ind.get("individual_score", 0)
+            raw_student_name = ind.get("student_name", "Unknown")
+            raw_student_id = ind.get("student_id", "N/A")
+            
+            parsed_id = raw_student_id
+            parsed_name = raw_student_name
+            display_group_name = raw_group_name
+            
+            # Try parsing the student name first
+            match = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_student_name)
+            if match:
+                parsed_id = match.group(1)
+                parsed_name = match.group(2)
+                # If group_name is the same as student_name, we can use the project part for group_name
+                if raw_group_name == raw_student_name and match.group(3):
+                    display_group_name = match.group(3)
+            elif parsed_id == "N/A" or not parsed_id:
+                # Fallback to parsing group name
+                match2 = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_group_name)
+                if match2:
+                    parsed_id = match2.group(1)
+                    if parsed_name == raw_student_name:
+                        parsed_name = match2.group(2)
+                    if match2.group(3):
+                        display_group_name = match2.group(3)
+                        
+            # Another fallback: if raw_group_name has the pattern but raw_student_name didn't match
+            if display_group_name == raw_group_name:
+                match3 = re.match(r'^(\d+)[_\-\s]+([^_\-\s]+)[_\-\s]*(.*)$', raw_group_name)
+                if match3 and match3.group(3):
+                    display_group_name = match3.group(3)
+                        
             students_list.append({
-                "student_name": ind.get("student_name", "Unknown"),
-                "student_id": ind.get("student_id", "N/A"),
-                "group_name": t.get("name", "Unknown"),
+                "student_name": parsed_name,
+                "student_id": parsed_id,
+                "group_name": display_group_name,
+                "target_id": target_id,
                 "group_score": group_score,
                 "individual_score": ind_score,
-                "total_score": group_score + ind_score
+                "total_score": group_score + ind_score,
+                "confirmed": confirmed
             })
             
     # Default sort
