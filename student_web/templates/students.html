@@ -98,7 +98,7 @@
         }
 
         .student-table .score-low {
-            color: #f85149;
+            color: #d29922;
         }
 
         .student-table .group-link {
@@ -272,9 +272,10 @@
             }
         }
 
-        function getScoreClass(score) {
-            if (score >= 90) return 'score-high';
-            if (score >= 60) return 'score-mid';
+        function getScoreClass(score, maxScore) {
+            const ratio = score / maxScore;
+            if (ratio >= 0.9) return 'score-high';
+            if (ratio >= 0.6) return 'score-mid';
             return 'score-low';
         }
 
@@ -293,10 +294,10 @@
                     <td class="rank-cell">${idx + 1}</td>
                     <td class="id-cell">${s.student_id || '-'}</td>
                     <td class="name-cell">${s.student_name}${s.confirmed ? '<span class="confirmed-badge-small" title="成绩已确认">✓</span>' : ''}</td>
-                    <td class="score-cell ${getScoreClass(s.individual_score)}">${s.individual_score || 0}</td>
+                    <td class="score-cell">${s.individual_score || 0}</td>
                     <td><a href="/detail/${encodeURIComponent(s.target_id)}" class="group-link">${s.group_name}</a></td>
                     <td class="score-cell">${s.group_score || 0}</td>
-                    <td class="score-cell ${getScoreClass(totalScore / 2)}" style="font-weight:700;">${totalScore}</td>
+                    <td class="score-cell ${getScoreClass(totalScore, 100)}" style="font-weight:700;">${totalScore}</td>
                 </tr>
             `}).join('');
         }
