@@ -125,6 +125,8 @@ class GeminiProvider(BaseLLM):
         """结构化输出，带有重试机制（兼容代理返回非标准JSON的情况）"""
         
         import re
+        import time
+        import sys
         
         # 兜底防御：有些第三方代理不支持 response_schema，导致返回纯文本
         # 手动将 schema 拼接到 prompt 后面，强制要求 LLM 返回 JSON
@@ -133,6 +135,9 @@ class GeminiProvider(BaseLLM):
             "\n\n【系统要求】请务必且仅返回符合以下 JSON Schema 的纯 JSON 字符串，不要包含任何 Markdown 标记或额外说明：\n" + 
             json.dumps(schema, ensure_ascii=False)
         )
+        
+        max_retries = 1
+        attempt = 0
         
         while True:
             try:
@@ -175,14 +180,28 @@ class GeminiProvider(BaseLLM):
                     
             except QuotaExceededError:
                 print("  [重试] 使用新 Key 重新请求...")
+                attempt = 0
                 continue
             except json.JSONDecodeError as e:
                 print(f"  [!] JSON 解析失败，模型返回内容可能不符合规范: {e}")
                 # 抛出异常由上层处理或重试机制处理
                 raise ValueError(f"模型返回内容无法解析为 JSON: {response.text}")
             except Exception as e:
-                self._handle_quota_error(e)
-                raise
+                if self._is_quota_error(e):
+                    if attempt < max_retries:
+                        delay = 5 * (2 ** attempt)
+                        print(f"  [重试] 遇到频率限制 (429)，等待 {delay} 秒后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                        time.sleep(delay)
+                        attempt += 1
+                        continue
+                    else:
+                        try:
+                            self._handle_quota_error(e)
+                        except AllQuotasExceededError:
+                            print(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
+                            sys.exit(1)
+                else:
+                    raise
 
     def upload_file(self, file_path: str) -> types.File:
         """上传文件到 Gemini File API"""
