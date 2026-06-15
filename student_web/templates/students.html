@@ -200,7 +200,7 @@
 
         <!-- 搜索框 -->
         <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索学号或姓名...">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索学号、姓名或作品名称...">
         </div>
 
         <main class="content-area">
@@ -331,7 +331,8 @@
 
             const filtered = allStudents.filter(s =>
                 (s.student_id && s.student_id.toLowerCase().includes(query)) ||
-                (s.student_name && s.student_name.toLowerCase().includes(query))
+                (s.student_name && s.student_name.toLowerCase().includes(query)) ||
+                (s.group_name && s.group_name.toLowerCase().includes(query))
             );
 
             renderTable(filtered);

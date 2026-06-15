@@ -161,7 +161,7 @@
                     ${g.thumbnail ? `<div class="card-thumbnail"><img src="${g.thumbnail}" alt="预览" loading="lazy"></div>` : ''}
                     <div class="card-content" style="padding: 12px 15px;">
                         <div class="card-header" style="margin-bottom: 0; align-items: center; gap: 10px;">
-                            <div class="rank" style="flex-shrink: 0;">#${idx + 1}${g.self_selected_topic ? '<span class="self-topic-badge" title="自主选题">⭐</span>' : ''}${g.uses_ai ? '<span class="ai-mini-badge" title="使用了AI">🤖</span>' : ''}${g.confirmed ? '<span class="confirmed-mini-badge" title="成绩已确认">✓</span>' : ''}</div>
+                            <div class="rank" style="flex-shrink: 0;">#${idx + 1}${g.uses_ai ? '<span class="ai-mini-badge" title="使用了AI">🤖</span>' : ''}${g.confirmed ? '<span class="confirmed-mini-badge" title="成绩已确认">✓</span>' : ''}</div>
                             <h3 class="group-name" title="${g.group_name}" style="flex: 1; margin: 0; text-align: left;">${g.group_name}</h3>
                             <div class="score-badge" style="flex-shrink: 0;">${g.total_score} 分</div>
                         </div>
