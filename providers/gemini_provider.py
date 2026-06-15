@@ -93,7 +93,8 @@ class GeminiProvider(BaseLLM):
         error_str = str(e).lower()
         return any(keyword in error_str for keyword in [
             "quota", "rate limit", "resource exhausted", 
-            "429", "too many requests", "limit exceeded"
+            "429", "too many requests", "limit exceeded",
+            "503", "unavailable", "high demand", "server error"
         ])
 
     def _handle_quota_error(self, e: Exception):
