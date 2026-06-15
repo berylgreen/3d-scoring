@@ -149,8 +149,30 @@ def api_students():
                 "confirmed": confirmed
             })
             
-    # Default sort
-    students_list.sort(key=lambda x: x["total_score"], reverse=True)
+    # Apply sort
+    sort_type = request.args.get('sort', 'total_desc')
+    
+    if sort_type == 'total_desc':
+        students_list.sort(key=lambda x: x["total_score"], reverse=True)
+    elif sort_type == 'total_asc':
+        students_list.sort(key=lambda x: x["total_score"])
+    elif sort_type == 'score_desc':
+        students_list.sort(key=lambda x: x["individual_score"], reverse=True)
+    elif sort_type == 'score_asc':
+        students_list.sort(key=lambda x: x["individual_score"])
+    elif sort_type == 'group_score_desc':
+        students_list.sort(key=lambda x: x["group_score"], reverse=True)
+    elif sort_type == 'group_score_asc':
+        students_list.sort(key=lambda x: x["group_score"])
+    elif sort_type == 'name_desc':
+        students_list.sort(key=lambda x: x["student_name"], reverse=True)
+    elif sort_type == 'name_asc':
+        students_list.sort(key=lambda x: x["student_name"])
+    elif sort_type == 'id_desc':
+        students_list.sort(key=lambda x: x["student_id"], reverse=True)
+    elif sort_type == 'id_asc':
+        students_list.sort(key=lambda x: x["student_id"])
+        
     return jsonify({"students": students_list, "total": len(students_list)})
 
 @app.route('/api/open-folder', methods=['POST'])
