@@ -35,7 +35,7 @@ app.config['JSON_AS_ASCII'] = False
 @app.route('/')
 def index():
     """首页 - 列表"""
-    return render_template('index.html', mode=settings.GRADING_MODE, course=settings.COURSE_TYPE)
+    return render_template('index.html', mode=settings.GRADING_MODE, course=settings.COURSE_TYPE, data_dir=str(settings.DATA_DIR))
 
 @app.route('/api/targets')
 def api_targets():
@@ -60,7 +60,7 @@ def detail(target_id):
 @app.route('/students')
 def students():
     """学生列表页"""
-    return render_template('students.html', mode=settings.GRADING_MODE, course=settings.COURSE_TYPE)
+    return render_template('students.html', mode=settings.GRADING_MODE, course=settings.COURSE_TYPE, data_dir=str(settings.DATA_DIR))
 
 @app.route('/api/students')
 def api_students():
