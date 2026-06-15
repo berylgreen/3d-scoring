@@ -85,7 +85,7 @@
                     return {
                         group_name: t.name,
                         target_id: t.target_id,
-                        total_score: t.total_score,
+                        total_score: Math.round(t.total_score || 0),
                         members: t.individuals ? t.individuals.map(i => i.student_name) : [],
                         member_count: t.individuals ? t.individuals.length : 0,
                         thumbnail: '/api/thumbnail/' + t.target_id,

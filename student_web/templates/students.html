@@ -301,15 +301,17 @@
             }
 
             tbody.innerHTML = students.map((s, idx) => {
-                const totalScore = (s.individual_score || 0) + (s.group_score || 0);
+                const individualScore = Math.round(s.individual_score || 0);
+                const groupScore = Math.round(s.group_score || 0);
+                const totalScore = individualScore + groupScore;
                 return `
                 <tr>
                     <td class="rank-cell">${idx + 1}</td>
                     <td class="id-cell">${s.student_id || '-'}</td>
                     <td class="name-cell">${s.student_name}${s.confirmed ? '<span class="confirmed-badge-small" title="成绩已确认">✓</span>' : '<span class="unconfirmed-badge-small" title="未确认">?</span>'}</td>
-                    <td class="score-cell">${s.individual_score || 0}</td>
+                    <td class="score-cell">${individualScore}</td>
                     <td><a href="/detail/${encodeURIComponent(s.target_id)}" class="group-link">${s.group_name}</a></td>
-                    <td class="score-cell">${s.group_score || 0}</td>
+                    <td class="score-cell">${groupScore}</td>
                     <td class="score-cell ${getScoreClass(totalScore, 100)}" style="font-weight:700;">${totalScore}</td>
                 </tr>
             `}).join('');

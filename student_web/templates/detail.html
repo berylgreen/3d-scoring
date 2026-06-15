@@ -261,7 +261,7 @@
             currentData = { folder_path: target.folder_path }; // for openFolderBtn
             
             document.getElementById('groupName').innerText = target.name;
-            document.getElementById('groupScore').innerText = target.total_score;
+            document.getElementById('groupScore').innerText = Math.round(target.total_score || 0);
 
             // Poly Count
             if (document.getElementById('polyCountDisplay')) {
@@ -308,7 +308,7 @@
             const scores = info.scores || {};
             const dims = document.getElementById('scoreDimensions');
             dims.innerHTML = SCORE_KEYS_ORDER.map(item => {
-                const v = scores[item.key] !== undefined ? scores[item.key] : 0;
+                const v = Math.round(scores[item.key] !== undefined ? scores[item.key] : 0);
                 return `
                 <div class="score-row">
                     <span class="score-key">${item.label}</span>
@@ -381,17 +381,18 @@
 
             // Members
             const membersContainer = document.getElementById('membersGrid');
-            const groupScore = info.total_group_score || target.total_score || 0;
+            const groupScore = Math.round(info.total_group_score || target.total_score || 0);
             membersContainer.innerHTML = (target.individuals || []).map((m, idx) => {
                 const imgUrl = data.media.personal_images ? data.media.personal_images[m.student_name] : null;
-                const totalScore = groupScore + (m.individual_score || 0);
+                const indScore = Math.round(m.individual_score || 0);
+                const totalScore = groupScore + indScore;
                 return `
                 <div class="member-card" data-idx="${idx}" data-student-name="${m.student_name}">
                     <div class="member-header">
                         <div class="member-name">${m.student_name} <span class="total-score-badge">${totalScore}分</span></div>
                         <div class="member-score">
-                            <span class="val-display">个人: ${m.individual_score || 0} 分</span>
-                            <input type="number" class="member-score-input edit-input hidden" value="${m.individual_score || 0}" min="0" max="20">
+                            <span class="val-display">个人: ${indScore} 分</span>
+                            <input type="number" class="member-score-input edit-input hidden" value="${indScore}" min="0" max="20">
                         </div>
                     </div>
                     ${imgUrl ? `<div class="member-img-box" onclick="openLightbox('${imgUrl}')"><img src="${imgUrl}" alt="${m.student_name}" loading="lazy"><span class="zoom-hint">🔍</span></div>` : ''}

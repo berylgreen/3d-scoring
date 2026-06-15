@@ -105,14 +105,14 @@ class Evaluator:
                             "scores": {
                                 "type": "object",
                                 "properties": {
-                                    "creativity": {"type": "number"},
-                                    "storyboard": {"type": "number"},
-                                    "modeling": {"type": "number"},
-                                    "basic_tech": {"type": "number"},
-                                    "adv_tech": {"type": "number"},
-                                    "fluency": {"type": "number"},
-                                    "rendering": {"type": "number"},
-                                    "document": {"type": "number"}
+                                    "creativity": {"type": "integer"},
+                                    "storyboard": {"type": "integer"},
+                                    "modeling": {"type": "integer"},
+                                    "basic_tech": {"type": "integer"},
+                                    "adv_tech": {"type": "integer"},
+                                    "fluency": {"type": "integer"},
+                                    "rendering": {"type": "integer"},
+                                    "document": {"type": "integer"}
                                 }
                             },
                             "workload_comment": {"type": "string"},
@@ -126,7 +126,7 @@ class Evaluator:
                             "properties": {
                                 "student_name": {"type": "string"},
                                 "task_description": {"type": "string"},
-                                "individual_score": {"type": "number"},
+                                "individual_score": {"type": "integer"},
                                 "individual_comment": {"type": "string"}
                             }
                         }
@@ -188,14 +188,14 @@ class Evaluator:
                         "scores": {
                             "type": "object",
                             "properties": {
-                                "theme_difficulty": {"type": "number"},
-                                "modeling_accuracy": {"type": "number"},
-                                "topology": {"type": "number"},
-                                "materials_textures": {"type": "number"},
-                                "uv_mapping": {"type": "number"},
-                                "lighting_rendering": {"type": "number"},
-                                "visual_quality": {"type": "number"},
-                                "documentation": {"type": "number"}
+                                "theme_difficulty": {"type": "integer"},
+                                "modeling_accuracy": {"type": "integer"},
+                                "topology": {"type": "integer"},
+                                "materials_textures": {"type": "integer"},
+                                "uv_mapping": {"type": "integer"},
+                                "lighting_rendering": {"type": "integer"},
+                                "visual_quality": {"type": "integer"},
+                                "documentation": {"type": "integer"}
                             }
                         },
                         "workload_comment": {"type": "string"},
@@ -209,7 +209,7 @@ class Evaluator:
                         "properties": {
                             "student_name": {"type": "string"},
                             "task_description": {"type": "string"},
-                            "individual_score": {"type": "number"},
+                            "individual_score": {"type": "integer"},
                             "individual_comment": {"type": "string"}
                         }
                     }
