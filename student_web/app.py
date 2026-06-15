@@ -76,7 +76,7 @@ def api_students():
         raw_group_name = t.get("name", "Unknown")
         confirmed = False
         
-        info = t.get("grading_result", {}).get("group_info") or t.get("grading_result", {}).get("student_info") or t.get("grading_result", {})
+        info = t.get("grading_result", {}).get("group_info", {})
         if isinstance(info, dict):
             confirmed = info.get("confirmed", False)
             
@@ -247,38 +247,20 @@ def api_target_update(target_id):
             
         updated = False
         for item in all_data:
-            if settings.GRADING_MODE == "group":
-                if item.get("group_info", {}).get("group_name") == target_id:
-                    # Update group info
-                    item["group_info"].update(data.get("group_info", {}))
-                    item["group_info"]["confirmed"] = 1
-                    # Update individuals
-                    for ind_data in data.get("individuals", []):
-                        for ind in item.get("individuals", []):
-                            if ind.get("student_name") == ind_data.get("student_name"):
-                                ind["individual_score"] = ind_data.get("individual_score", 0)
-                                ind["individual_comment"] = ind_data.get("individual_comment", "")
-                    updated = True
-                    break
-            else:
-                student_info = item.get("student_info") or item.get("group_info", {})
-                if student_info.get("student_id") == target_id or student_info.get("name") == target_id or student_info.get("group_name") == target_id:
-                    # Update info
-                    if "group_info" in item:
-                        item["group_info"].update(data.get("group_info", {}))
-                        item["group_info"]["confirmed"] = 1
-                    elif "student_info" in item:
-                        item["student_info"].update(data.get("group_info", {}))
-                        item["student_info"]["confirmed"] = 1
-                        
-                    # Update individuals
-                    for ind_data in data.get("individuals", []):
-                        for ind in item.get("individuals", []):
-                            if ind.get("student_name") == ind_data.get("student_name"):
-                                ind["individual_score"] = ind_data.get("individual_score", 0)
-                                ind["individual_comment"] = ind_data.get("individual_comment", "")
-                    updated = True
-                    break
+            group_info = item.get("group_info", {})
+            if group_info.get("group_name") == target_id or group_info.get("name") == target_id:
+                # Update group info
+                item["group_info"].update(data.get("group_info", {}))
+                item["group_info"]["confirmed"] = 1
+                
+                # Update individuals
+                for ind_data in data.get("individuals", []):
+                    for ind in item.get("individuals", []):
+                        if ind.get("student_name") == ind_data.get("student_name"):
+                            ind["individual_score"] = ind_data.get("individual_score", 0)
+                            ind["individual_comment"] = ind_data.get("individual_comment", "")
+                updated = True
+                break
                     
         if updated:
             with open(settings.GRADING_RESULTS_JSON, "w", encoding="utf-8") as f:

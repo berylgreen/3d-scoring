@@ -257,7 +257,7 @@
 
         function renderDetail(data) {
             const target = data.target;
-            const info = target.grading_result?.group_info || target.grading_result?.student_info || target.grading_result?.grading_result || target.grading_result || {};
+            const info = target.grading_result?.group_info || {};
             currentData = { folder_path: target.folder_path }; // for openFolderBtn
             
             document.getElementById('groupName').innerText = target.name;

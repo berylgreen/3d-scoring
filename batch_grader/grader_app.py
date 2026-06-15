@@ -140,19 +140,12 @@ class Evaluator:
             # Post process format into consistent JSON format for data loader
             import os
             class_name = os.path.basename(os.path.dirname(folder_path))
-            extracted_names = extract_names_from_string(target_name)
-            student_id = extracted_names[0] if extracted_names else target_name
             
             group_info = result.setdefault("group_info", {})
-            group_info["class_name"] = class_name
-            group_info["folder_path"] = folder_path
-            group_info["student_id"] = student_id
-            group_info["name"] = target_name
-            group_info["project_name"] = target_name
-            
+            group_info["group_name"] = target_name
             scores = group_info.get("scores", {})
-            group_info["total_score"] = sum(scores.values()) if scores else 0
-            group_info["max_score"] = 100
+            group_info["total_group_score"] = sum(scores.values()) if scores else 0
+            group_info["folder_path"] = folder_path
             
             return result
                 
@@ -222,19 +215,12 @@ class Evaluator:
         # Post process format into consistent JSON format for data loader
         import os
         class_name = os.path.basename(os.path.dirname(folder_path))
-        extracted_names = extract_names_from_string(target_name)
-        student_id = extracted_names[0] if extracted_names else target_name
         
         group_info = result.setdefault("group_info", {})
-        group_info["class_name"] = class_name
-        group_info["folder_path"] = folder_path
-        group_info["student_id"] = student_id
-        group_info["name"] = target_name
-        group_info["project_name"] = target_name
-        
+        group_info["group_name"] = target_name
         scores = group_info.get("scores", {})
-        group_info["total_score"] = sum(scores.values()) if scores else 0
-        group_info["max_score"] = 100
+        group_info["total_group_score"] = sum(scores.values()) if scores else 0
+        group_info["folder_path"] = folder_path
         
         return result
 

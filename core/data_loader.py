@@ -70,49 +70,27 @@ def load_all_targets() -> List[Dict]:
             
         targets = []
         for item in data:
-            if settings.GRADING_MODE == "group":
-                target_name = item.get("group_info", {}).get("group_name", "")
-                if not target_name:
-                    continue
+            group_info = item.get("group_info", {})
+            target_name = group_info.get("group_name") or group_info.get("name") or group_info.get("project_name", "")
+            if not target_name:
+                continue
+            
+            folder_path = group_info.get("folder_path", "")
+            if not folder_path:
+                folder_path = item.get("folder_path", "")
+            if not folder_path:
                 # 兼容旧版的逻辑，查找文件夹
                 real_path = _find_group_folder_path(target_name)
                 folder_path = str(real_path) if real_path else ""
-                
-                targets.append({
-                    "target_id": target_name,
-                    "name": target_name,
-                    "folder_path": folder_path,
-                    "total_score": item.get("group_info", {}).get("total_group_score", 0),
-                    "grading_result": item,
-                    "individuals": item.get("individuals", [])
-                })
-            else:
-                # individual mode
-                student_info = item.get("student_info") or item.get("group_info", {})
-                target_id = student_info.get("student_id") or student_info.get("name") or student_info.get("group_name", "")
-                if not target_id:
-                    continue
-                    
-                # Path resolution
-                original_folder_path = student_info.get("folder_path", "")
-                class_name = student_info.get("class_name", "")
-                if original_folder_path:
-                    folder_name_from_path = Path(original_folder_path).name
-                    current_folder_path = str(STUDENT_DIR_BASE / class_name / folder_name_from_path) if class_name else original_folder_path
-                else:
-                    current_folder_path = ""
-                    
-                targets.append({
-                    "target_id": target_id,
-                    "name": student_info.get("name") or student_info.get("group_name", ""),
-                    "project_name": student_info.get("project_name", ""),
-                    "class_name": class_name,
-                    "folder_path": current_folder_path,
-                    "total_score": item.get("total_score") or student_info.get("total_score", 0),
-                    "grading_result": item,
-                    "individuals": item.get("individuals", []),
-                    "grading_time": student_info.get("grading_time", "")
-                })
+            
+            targets.append({
+                "target_id": target_name,
+                "name": target_name,
+                "folder_path": folder_path,
+                "total_score": group_info.get("total_group_score") or group_info.get("total_score", 0),
+                "grading_result": item,
+                "individuals": item.get("individuals", [])
+            })
         return targets
     except Exception as e:
         print(f"Error loading JSON data: {e}")

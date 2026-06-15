@@ -81,7 +81,7 @@
                 const res = await fetch('/api/targets');
                 const data = await res.json();
                 allGroups = data.data.map(t => {
-                    const info = t.grading_result?.group_info || t.grading_result?.student_info || t.grading_result?.grading_result || t.grading_result || {};
+                    const info = t.grading_result?.group_info || {};
                     return {
                         group_name: t.name,
                         target_id: t.target_id,
