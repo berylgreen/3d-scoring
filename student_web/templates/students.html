@@ -125,6 +125,19 @@
             margin-left: 6px;
         }
 
+        .student-table .unconfirmed-badge-small {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #6e7681;
+            color: #fff;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            margin-left: 6px;
+        }
+
         .nav-tabs {
             display: flex;
             gap: 20px;
@@ -293,7 +306,7 @@
                 <tr>
                     <td class="rank-cell">${idx + 1}</td>
                     <td class="id-cell">${s.student_id || '-'}</td>
-                    <td class="name-cell">${s.student_name}${s.confirmed ? '<span class="confirmed-badge-small" title="成绩已确认">✓</span>' : ''}</td>
+                    <td class="name-cell">${s.student_name}${s.confirmed ? '<span class="confirmed-badge-small" title="成绩已确认">✓</span>' : '<span class="unconfirmed-badge-small" title="未确认">?</span>'}</td>
                     <td class="score-cell">${s.individual_score || 0}</td>
                     <td><a href="/detail/${encodeURIComponent(s.target_id)}" class="group-link">${s.group_name}</a></td>
                     <td class="score-cell">${s.group_score || 0}</td>

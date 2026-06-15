@@ -231,6 +231,22 @@ body {
     vertical-align: middle;
 }
 
+/* 成绩未确认迷你标记 */
+.unconfirmed-mini-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    background: #6e7681;
+    color: #fff;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    font-weight: bold;
+    vertical-align: middle;
+}
+
 /* 详情页标签徽章 */
 .tag-badges {
     display: flex;
@@ -606,6 +622,20 @@ body {
     50% {
         box-shadow: 0 2px 12px rgba(35, 134, 54, 0.5);
     }
+}
+
+/* 未确认标识 */
+.unconfirmed-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #6e7681, #8b949e);
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(110, 118, 129, 0.3);
 }
 
 .edit-input {

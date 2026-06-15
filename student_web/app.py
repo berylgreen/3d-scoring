@@ -228,9 +228,69 @@ def api_target_detail(target_id):
             response_data["media"]["personal_images"] = {name: f"/api/image/{target_id}/personal/{name}" for name in personal_images}
             
     max_files = find_max_files(folder_path)
-    response_data["media"]["max_files"] = max_files
-
+    if max_files:
+        response_data["media"]["max_files"] = max_files
+        
     return jsonify(response_data)
+
+@app.route('/api/target/<path:target_id>/update', methods=['POST'])
+def api_target_update(target_id):
+    """保存目标修改并标记为已确认"""
+    data = request.json
+    
+    if not settings.GRADING_RESULTS_JSON.exists():
+        return jsonify({"success": False, "error": "No JSON file"}), 404
+        
+    try:
+        with open(settings.GRADING_RESULTS_JSON, "r", encoding="utf-8") as f:
+            all_data = json.load(f)
+            
+        updated = False
+        for item in all_data:
+            if settings.GRADING_MODE == "group":
+                if item.get("group_info", {}).get("group_name") == target_id:
+                    # Update group info
+                    item["group_info"].update(data.get("group_info", {}))
+                    item["group_info"]["confirmed"] = 1
+                    # Update individuals
+                    for ind_data in data.get("individuals", []):
+                        for ind in item.get("individuals", []):
+                            if ind.get("student_name") == ind_data.get("student_name"):
+                                ind["individual_score"] = ind_data.get("individual_score", 0)
+                                ind["individual_comment"] = ind_data.get("individual_comment", "")
+                    updated = True
+                    break
+            else:
+                student_info = item.get("student_info") or item.get("group_info", {})
+                if student_info.get("student_id") == target_id or student_info.get("name") == target_id or student_info.get("group_name") == target_id:
+                    # Update info
+                    if "group_info" in item:
+                        item["group_info"].update(data.get("group_info", {}))
+                        item["group_info"]["confirmed"] = 1
+                    elif "student_info" in item:
+                        item["student_info"].update(data.get("group_info", {}))
+                        item["student_info"]["confirmed"] = 1
+                        
+                    # Update individuals
+                    for ind_data in data.get("individuals", []):
+                        for ind in item.get("individuals", []):
+                            if ind.get("student_name") == ind_data.get("student_name"):
+                                ind["individual_score"] = ind_data.get("individual_score", 0)
+                                ind["individual_comment"] = ind_data.get("individual_comment", "")
+                    updated = True
+                    break
+                    
+        if updated:
+            with open(settings.GRADING_RESULTS_JSON, "w", encoding="utf-8") as f:
+                json.dump(all_data, f, ensure_ascii=False, indent=2)
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "error": "Target not found"}), 404
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
 
 @app.route('/api/thumbnail/<path:target_id>')
 def api_thumbnail(target_id):

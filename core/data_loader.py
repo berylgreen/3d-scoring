@@ -89,7 +89,7 @@ def load_all_targets() -> List[Dict]:
             else:
                 # individual mode
                 student_info = item.get("student_info") or item.get("group_info", {})
-                target_id = student_info.get("student_id", "")
+                target_id = student_info.get("student_id") or student_info.get("name") or student_info.get("group_name", "")
                 if not target_id:
                     continue
                     
@@ -104,7 +104,7 @@ def load_all_targets() -> List[Dict]:
                     
                 targets.append({
                     "target_id": target_id,
-                    "name": student_info.get("name", ""),
+                    "name": student_info.get("name") or student_info.get("group_name", ""),
                     "project_name": student_info.get("project_name", ""),
                     "class_name": class_name,
                     "folder_path": current_folder_path,

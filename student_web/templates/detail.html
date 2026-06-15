@@ -45,6 +45,7 @@
                 <span class="value" id="groupScore">--</span>
                 <div class="edit-actions">
                     <span id="confirmedBadge" class="confirmed-badge hidden">✓ 已确认</span>
+                    <span id="unconfirmedBadge" class="unconfirmed-badge hidden">? 未确认</span>
                     <button id="editBtn" class="btn btn-primary btn-sm" onclick="toggleEdit()">编辑</button>
                     <button id="saveBtn" class="btn btn-success btn-sm hidden" onclick="saveChanges()">保存</button>
                     <button id="cancelBtn" class="btn btn-secondary btn-sm hidden" onclick="toggleEdit()">取消</button>
@@ -286,10 +287,13 @@
 
             // 已确认标识
             const confirmedBadge = document.getElementById('confirmedBadge');
+            const unconfirmedBadge = document.getElementById('unconfirmedBadge');
             if (info.confirmed === 1 || info.confirmed === true) {
                 confirmedBadge.classList.remove('hidden');
+                if (unconfirmedBadge) unconfirmedBadge.classList.add('hidden');
             } else {
                 confirmedBadge.classList.add('hidden');
+                if (unconfirmedBadge) unconfirmedBadge.classList.remove('hidden');
             }
 
             // Comments
