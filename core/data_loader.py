@@ -15,6 +15,27 @@ STUDENT_DIR_BASE = settings.WORKS_ROOT_DIR
 VIDEO_EXTENSIONS = settings.VIDEO_EXTENSIONS
 IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".bmp", ".webp"]
 
+IGNORE_DIRS = {'__pycache__', '.git', '.vscode', 'node_modules', 'Library', 'Logs', 'Temp', 'obj', 'Packages', 'build', 'UserSettings', 'ProjectSettings'}
+
+def _fast_rglob(folder_path: str, extensions: List[str]) -> List[Path]:
+    """
+    Fast recursive search for files with specific extensions,
+    ignoring common massive directories like Unity 'Library' or '.git'.
+    """
+    results = []
+    ext_set = set(ext.lower() for ext in extensions)
+    
+    for root, dirs, files in os.walk(folder_path):
+        # Prune ignored directories
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+        
+        root_path = Path(root)
+        for f in files:
+            if Path(f).suffix.lower() in ext_set:
+                results.append(root_path / f)
+                
+    return results
+
 def load_all_targets() -> List[Dict]:
     """
     统加载所有的评分目标。
@@ -145,13 +166,10 @@ def _find_group_folder_path(group_name: str) -> Optional[Path]:
 def find_video_file(folder_path: str) -> Optional[str]:
     if not folder_path:
         return None
-    folder = Path(folder_path)
-    if not folder.exists():
+    if not os.path.exists(folder_path):
         return None
     
-    candidates = []
-    for ext in VIDEO_EXTENSIONS:
-        candidates.extend(list(folder.rglob(f"*{ext}")))
+    candidates = _fast_rglob(folder_path, VIDEO_EXTENSIONS)
     
     if not candidates:
         return None
@@ -170,11 +188,10 @@ def find_video_file(folder_path: str) -> Optional[str]:
 def find_docx_file(folder_path: str) -> Optional[str]:
     if not folder_path:
         return None
-    folder = Path(folder_path)
-    if not folder.exists():
+    if not os.path.exists(folder_path):
         return None
     
-    docx_files = list(folder.rglob("*.docx"))
+    docx_files = _fast_rglob(folder_path, [".docx"])
     if not docx_files:
         return None
         
@@ -184,14 +201,12 @@ def find_docx_file(folder_path: str) -> Optional[str]:
 def find_thumbnail(folder_path: str) -> Optional[str]:
     if not folder_path:
         return None
-    folder = Path(folder_path)
-    if not folder.exists():
+    if not os.path.exists(folder_path):
         return None
     
-    for ext in IMAGE_EXTENSIONS:
-        images = list(folder.rglob(f"*{ext}"))
-        if images:
-            return str(images[0])
+    images = _fast_rglob(folder_path, IMAGE_EXTENSIONS)
+    if images:
+        return str(images[0])
     return None
 
 def find_effect_images(folder_path: str) -> List[str]:
@@ -199,10 +214,7 @@ def find_effect_images(folder_path: str) -> List[str]:
     if not folder_path or not os.path.exists(folder_path):
         return images
     
-    folder = Path(folder_path)
-    all_images = []
-    for ext in IMAGE_EXTENSIONS:
-        all_images.extend(list(folder.rglob(f"*{ext}")))
+    all_images = _fast_rglob(folder_path, IMAGE_EXTENSIONS)
         
     all_images.sort(key=lambda x: x.name)
     used_images = set()
@@ -257,10 +269,7 @@ def find_personal_images(folder_path: str, members: List[Dict]) -> Dict[str, str
     if not folder_path or not os.path.exists(folder_path):
         return images
     
-    folder = Path(folder_path)
-    all_images = []
-    for ext in IMAGE_EXTENSIONS:
-        all_images.extend(list(folder.rglob(f"*{ext}")))
+    all_images = _fast_rglob(folder_path, IMAGE_EXTENSIONS)
         
     for member in members:
         name = member.get("student_name", "").strip()
@@ -278,13 +287,10 @@ def find_personal_images(folder_path: str, members: List[Dict]) -> Dict[str, str
 def find_max_files(folder_path: str) -> List[Dict[str, str]]:
     if not folder_path:
         return []
-    folder = Path(folder_path)
-    if not folder.exists():
+    if not os.path.exists(folder_path):
         return []
     
-    source_files = []
-    for ext in ["*.max", "*.blend", "*.ma", "*.mb", "*.c4d"]:
-        source_files.extend(list(folder.rglob(ext)))
+    source_files = _fast_rglob(folder_path, [".max", ".blend", ".ma", ".mb", ".c4d"])
         
     if not source_files:
         return []
