@@ -166,6 +166,14 @@
                 { key: 'rendering', label: '材质光影与渲染' },
                 { key: 'document', label: '文档整理' }
             ];
+        } else if (courseType === '3d_comprehensive') {
+            SCORE_KEYS_ORDER = [
+                { key: 'theme_culture', label: '主题契合与文化内涵' },
+                { key: 'modeling_topology', label: '三维建模与拓扑结构' },
+                { key: 'materials_lighting', label: '材质纹理与灯光渲染' },
+                { key: 'innovation_performance', label: '创新创意与整体表现' },
+                { key: 'engineering_document', label: '工程规范与论述文档' }
+            ];
         } else {
             SCORE_KEYS_ORDER = [
                 { key: 'theme_difficulty', label: '主题难度' },
@@ -385,13 +393,19 @@
             membersContainer.innerHTML = (target.individuals || []).map((m, idx) => {
                 const imgUrl = data.media.personal_images ? data.media.personal_images[m.student_name] : null;
                 const indScore = Math.round(m.individual_score || 0);
-                const totalScore = groupScore + indScore;
+                let totalScore = groupScore + indScore;
+                if (courseType === '3d_comprehensive') {
+                    totalScore = Math.round(groupScore * 0.8) + indScore;
+                }
+                
+                let indScoreDisplay = `<span class="val-display">个人: ${indScore} 分</span>`;
+                
                 return `
                 <div class="member-card" data-idx="${idx}" data-student-name="${m.student_name}">
                     <div class="member-header">
                         <div class="member-name">${m.student_name} <span class="total-score-badge">${totalScore}分</span></div>
                         <div class="member-score">
-                            <span class="val-display">个人: ${indScore} 分</span>
+                            ${indScoreDisplay}
                             <input type="number" class="member-score-input edit-input hidden" value="${indScore}" min="0" max="20">
                         </div>
                     </div>

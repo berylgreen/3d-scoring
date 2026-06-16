@@ -198,6 +198,10 @@ class GeminiProvider(BaseLLM):
                     else:
                         try:
                             self._handle_quota_error(e)
+                        except QuotaExceededError:
+                            print("  [重试] 切换新 Key 后重新请求...")
+                            attempt = 0
+                            continue
                         except AllQuotasExceededError:
                             print(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
                             sys.exit(1)

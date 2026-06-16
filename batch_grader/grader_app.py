@@ -70,6 +70,8 @@ class Evaluator:
         # 区分课程和模式
         if settings.COURSE_TYPE == "animation":
             return self._grade_animation(target_name, folder_path, document_content)
+        elif settings.COURSE_TYPE == "3d_comprehensive":
+            return self._grade_3d_comprehensive(target_name, folder_path, document_content)
         else:
             return self._grade_modeling(target_name, folder_path, document_content)
 
@@ -228,6 +230,86 @@ class Evaluator:
         
         return result
 
+    def _grade_3d_comprehensive(self, target_name, folder_path, document_content):
+        # 3D综合 模式下，也会上传视频
+        video_path = find_video_file(folder_path)
+        uploaded_video = None
+        if video_path and settings.ENABLE_LLM_GRADING:
+            try:
+                uploaded_video = self.llm.upload_file(video_path)
+            except Exception as e:
+                print(f"  [警告] 视频上传失败: {e}")
+        
+        try:
+            if settings.GRADING_MODE == "individual":
+                prompt = prompts.COMPREHENSIVE_3D_INDIVIDUAL_PROMPT.format(
+                    target_name=target_name,
+                    document_content=document_content
+                )
+            else:
+                # Group
+                known_names = extract_names_from_string(target_name)
+                prompt = prompts.COMPREHENSIVE_3D_GROUP_PROMPT.format(
+                    target_name=target_name,
+                    known_names=known_names,
+                    document_content=document_content
+                )
+                
+            schema = {
+                "type": "object",
+                "properties": {
+                    "group_info": {
+                        "type": "object",
+                        "properties": {
+                            "scores": {
+                                "type": "object",
+                                "properties": {
+                                    "theme_culture": {"type": "integer"},
+                                    "modeling_topology": {"type": "integer"},
+                                    "materials_lighting": {"type": "integer"},
+                                    "innovation_performance": {"type": "integer"},
+                                    "engineering_document": {"type": "integer"}
+                                }
+                            },
+                            "workload_comment": {"type": "string"},
+                            "comments": {"type": "string"}
+                        }
+                    },
+                    "individuals": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "student_id": {"type": "string"},
+                                "student_name": {"type": "string"},
+                                "task_description": {"type": "string"},
+                                "individual_score": {"type": "integer"},
+                                "individual_comment": {"type": "string"}
+                            }
+                        }
+                    }
+                }
+            }
+
+            files = [uploaded_video] if uploaded_video else []
+            result = self.llm.generate_structured(prompt, schema=schema, files=files)
+            
+            # Post process format into consistent JSON format for data loader
+            import os
+            class_name = os.path.basename(os.path.dirname(folder_path))
+            
+            group_info = result.setdefault("group_info", {})
+            group_info["group_name"] = target_name
+            scores = group_info.get("scores", {})
+            group_info["total_group_score"] = sum(scores.values()) if scores else 0
+            group_info["folder_path"] = folder_path
+            
+            return result
+                
+        finally:
+            if uploaded_video:
+                self.llm.delete_file(uploaded_video)
+
 def run_batch():
     print("=" * 60)
     print(f"3D 评分系统 - {settings.COURSE_TYPE.upper()} - {settings.GRADING_MODE.upper()}")
@@ -260,28 +342,33 @@ def run_batch():
     
     evaluator = Evaluator()
     
-    for target in targets_to_process:
-        print(f"\nProcessing: {target['folder_name']}")
-        try:
-            result = evaluator.grade_target(target)
-            results.append(result)
-            
-            # Atomic save
-            JSON_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-            temp_file = JSON_DATA_PATH.with_name(JSON_DATA_PATH.name + '.tmp')
-            with open(temp_file, 'w', encoding='utf-8') as f:
-                json.dump(results, f, ensure_ascii=False, indent=2)
-            os.replace(temp_file, JSON_DATA_PATH)
-            
-        except Exception as e:
-            print(f"Error processing {target['folder_name']}: {e}")
-            traceback.print_exc()
-            
-        # 基础延时，避免触发限流
-        if settings.API_DELAY_SECONDS > 0:
-            import time
-            print(f"  [延时] 休息 {settings.API_DELAY_SECONDS} 秒，以满足 API 限流要求...")
-            time.sleep(settings.API_DELAY_SECONDS)
+    try:
+        for target in targets_to_process:
+            print(f"\nProcessing: {target['folder_name']}")
+            try:
+                result = evaluator.grade_target(target)
+                results.append(result)
+                
+                # Atomic save
+                JSON_DATA_PATH.parent.mkdir(parents=True, exist_ok=True)
+                temp_file = JSON_DATA_PATH.with_name(JSON_DATA_PATH.name + '.tmp')
+                with open(temp_file, 'w', encoding='utf-8') as f:
+                    json.dump(results, f, ensure_ascii=False, indent=2)
+                os.replace(temp_file, JSON_DATA_PATH)
+                
+            except Exception as e:
+                print(f"Error processing {target['folder_name']}: {e}")
+                traceback.print_exc()
+                
+            # 基础延时，避免触发限流
+            if settings.API_DELAY_SECONDS > 0:
+                import time
+                print(f"  [延时] 休息 {settings.API_DELAY_SECONDS} 秒，以满足 API 限流要求...")
+                time.sleep(settings.API_DELAY_SECONDS)
+    except BaseException as outer_e:
+        print(f"\n[FATAL ERROR] 评分程序遭遇严重异常/中断，即将退出: {outer_e}")
+        traceback.print_exc()
+        raise
 
 if __name__ == "__main__":
     run_batch()

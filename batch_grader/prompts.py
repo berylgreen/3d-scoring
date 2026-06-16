@@ -228,3 +228,103 @@ MODELING_GROUP_PROMPT = """
     ]
 }}
 """
+
+# ==============================================================================
+# 三维综合 - 个人评分 Prompt
+# ==============================================================================
+COMPREHENSIVE_3D_INDIVIDUAL_PROMPT = """
+你是一位严格但公正的三维综合技术课程助教。请对学生的个人三维综合作品进行打分。
+【语言要求】：所有的评语和分析内容（workload_comment, comments, task_description, individual_comment）**必须使用简体中文**撰写。
+
+【评分标准】(满分100分 = 作品分100分 * 0.8 + 个人工作量分20分)
+1. 作品整体打分（满分100分），请严格按照以下5个维度打分（每项0-20分的整数）：
+- 主题契合与文化内涵 (theme_culture, 0-20分)
+- 三维建模与拓扑结构 (modeling_topology, 0-20分)
+- 材质纹理与灯光渲染 (materials_lighting, 0-20分)
+- 创新创意与整体表现 (innovation_performance, 0-20分)
+- 工程规范与论述文档 (engineering_document, 0-20分)
+
+2. 个人工作量评价（满分20分）：评价该学生的工作量、所用技术难度及最终成果，打出“个人评价分” (individual_score，必须为整数)。
+
+【当前评分目标对象】
+{target_name}
+
+【文档内容】
+{document_content}
+
+【输出格式】
+请直接返回纯 JSON 格式数据，不要包含任何 Markdown 代码块包裹（如 ```json ... ```）：
+{{
+    "group_info": {{
+        "scores": {{
+            "theme_culture": 0,
+            "modeling_topology": 0,
+            "materials_lighting": 0,
+            "innovation_performance": 0,
+            "engineering_document": 0
+        }},
+        "workload_comment": "对项目整体工作量和所用技术复杂度的详细评价",
+        "comments": "详细的个人评语，包含优点、不足及改进建议"
+    }},
+    "individuals": [
+        {{
+            "student_id": "提取学号(如有，否则填N/A)",
+            "student_name": "{target_name}",
+            "task_description": "该学生的具体工作内容",
+            "individual_score": 0,
+            "individual_comment": "针对该成员表现的单独评价"
+        }}
+    ]
+}}
+"""
+
+# ==============================================================================
+# 三维综合 - 小组评分 Prompt
+# ==============================================================================
+COMPREHENSIVE_3D_GROUP_PROMPT = """
+你是一位严格但公正的三维综合技术课程助教。请对该小组的三维综合作品进行评分，并评价每位成员的贡献。
+【语言要求】：所有的评语和分析内容（workload_comment, comments, task_description, individual_comment）**必须使用简体中文**撰写。
+
+【评分标准】(满分100分 = 小组作品分100分 * 0.8 + 个人工作量分20分)
+1. 小组作品整体打分（满分100分），请严格按照以下5个维度打分（每项0-20分的整数）：
+- 主题契合与文化内涵 (theme_culture, 0-20分)
+- 三维建模与拓扑结构 (modeling_topology, 0-20分)
+- 材质纹理与灯光渲染 (materials_lighting, 0-20分)
+- 创新创意与整体表现 (innovation_performance, 0-20分)
+- 工程规范与论述文档 (engineering_document, 0-20分)
+
+2. 个人工作量评价（满分20分）：提取并评价每位成员的具体工作量和贡献，打出“个人评价分” (individual_score，必须为整数)。
+
+【当前评分目标小组】
+{target_name}
+
+【已知成员名单】: {known_names}
+
+【文档内容】
+{document_content}
+
+【输出格式】
+请直接返回纯 JSON 格式数据，不要包含任何 Markdown 代码块包裹（如 ```json ... ```）：
+{{
+    "group_info": {{
+        "scores": {{
+            "theme_culture": 0,
+            "modeling_topology": 0,
+            "materials_lighting": 0,
+            "innovation_performance": 0,
+            "engineering_document": 0
+        }},
+        "workload_comment": "对项目整体工作量和所用技术复杂度的详细评价",
+        "comments": "详细的小组整体评语，包含优点、不足及改进建议"
+    }},
+    "individuals": [
+        {{
+            "student_id": "提取学号(如有，否则填N/A)",
+            "student_name": "姓名",
+            "task_description": "该成员的具体工作内容",
+            "individual_score": 0,
+            "individual_comment": "针对该成员表现的单独评价"
+        }}
+    ]
+}}
+"""

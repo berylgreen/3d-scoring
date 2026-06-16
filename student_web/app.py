@@ -214,12 +214,13 @@ def api_target_detail(target_id):
         "media": {}
     }
     
-    if settings.COURSE_TYPE == "animation":
+    if settings.COURSE_TYPE in ("animation", "3d_comprehensive"):
         video_path = find_video_file(folder_path)
         if video_path:
             response_data["media"]["video_url"] = f"/api/video/{target_id}"
-    else:
-        # Modeling: effect images, personal images, max files
+            
+    if settings.COURSE_TYPE in ("modeling", "3d_comprehensive"):
+        # Modeling/3D Comprehensive: effect images, personal images, max files
         effect_images = find_effect_images(folder_path)
         response_data["media"]["effect_images"] = [f"/api/image/{target_id}/effect/{i}" for i in range(len(effect_images))]
         
@@ -279,7 +280,7 @@ def api_thumbnail(target_id):
     target = get_target_by_id(target_id)
     if not target: abort(404)
     
-    if settings.COURSE_TYPE == "animation":
+    if settings.COURSE_TYPE in ("animation", "3d_comprehensive"):
         video_path = find_video_file(target.get("folder_path"))
         if video_path and os.path.exists(video_path):
             cache_dir = os.path.join(PROJECT_ROOT, "thumbnail_cache")
