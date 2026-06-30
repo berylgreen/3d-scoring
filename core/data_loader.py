@@ -195,8 +195,41 @@ def find_docx_file(folder_path: str) -> Optional[str]:
     if not docx_files:
         return None
         
+    import re
+    folder_name = os.path.basename(folder_path)
+    personal_pattern = re.compile(r'^(\d{4,})[_\-\s—]*([\u4e00-\u9fa5A-Za-z]+)')
+    group_docs = []
+    
+    for f in docx_files:
+        if not personal_pattern.match(f.stem):
+            group_docs.append(f)
+            
+    if group_docs:
+        for f in group_docs:
+            if folder_name in f.name:
+                return str(f)
+        group_docs.sort(key=lambda x: x.stat().st_size, reverse=True)
+        return str(group_docs[0])
+        
     docx_files.sort(key=lambda x: x.stat().st_size, reverse=True)
     return str(docx_files[0])
+
+def find_personal_docx_files(folder_path: str) -> Dict[str, str]:
+    if not folder_path or not os.path.exists(folder_path):
+        return {}
+    
+    docx_files = _fast_rglob(folder_path, [".docx"])
+    personal_docs = {}
+    import re
+    personal_pattern = re.compile(r'^(\d{4,})[_\-\s—]*([\u4e00-\u9fa5A-Za-z]+)')
+    
+    for f in docx_files:
+        match = personal_pattern.match(f.stem)
+        if match:
+            student_name = match.group(2)
+            personal_docs[student_name] = str(f)
+            
+    return personal_docs
 
 def find_thumbnail(folder_path: str) -> Optional[str]:
     if not folder_path:

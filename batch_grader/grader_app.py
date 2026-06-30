@@ -16,7 +16,8 @@ from core.data_loader import (
     find_video_file,
     find_docx_file,
     extract_docx_content,
-    JSON_DATA_PATH
+    JSON_DATA_PATH,
+    find_personal_docx_files
 )
 from batch_grader import prompts
 import re
@@ -66,6 +67,17 @@ class Evaluator:
                 document_content = document_content[:6000] + "...[截断]"
         else:
             document_content = "未找到报告文档。"
+            
+        # 增加处理个人文档
+        personal_docs = find_personal_docx_files(folder_path)
+        if personal_docs:
+            combined_content = f"【小组论述总报告】:\n{document_content}\n\n"
+            for student_name, p_path in personal_docs.items():
+                p_content = extract_docx_content(p_path, as_html=False)
+                if len(p_content) > 3000:
+                    p_content = p_content[:3000] + "...[截断]"
+                combined_content += f"【组员 {student_name} 的个人论述文档】:\n{p_content}\n\n"
+            document_content = combined_content
 
         # 区分课程和模式
         if settings.COURSE_TYPE == "animation":
