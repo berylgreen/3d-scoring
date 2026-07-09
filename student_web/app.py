@@ -41,6 +41,12 @@ def index():
 def api_targets():
     """获取所有目标数据"""
     targets = load_all_targets()
+    
+    # 增加 Blender 源文件检测 (改为从数据缓存中直接读取)
+    for t in targets:
+        info = t.get("grading_result", {}).get("group_info", {})
+        t["is_blender"] = info.get("is_blender", False)
+
     # Sort by score desc by default
     targets.sort(key=lambda x: x.get("total_score", 0), reverse=True)
     return jsonify({"success": True, "data": targets})

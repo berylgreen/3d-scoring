@@ -171,6 +171,22 @@ body {
     cursor: help;
 }
 
+/* Blender使用小标记 */
+.blender-mini-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    font-size: 0.85rem;
+    filter: drop-shadow(0 0 3px rgba(234, 118, 0, 0.6));
+    cursor: help;
+}
+
+.blender-mini-badge svg {
+    width: 1.1em;
+    height: 1.1em;
+    color: #ea7600; /* Blender Orange */
+}
+
 .score-badge {
     background: rgba(88, 166, 255, 0.15);
     color: var(--accent);
@@ -275,6 +291,12 @@ body {
     background: linear-gradient(135deg, #9c27b0, #7b1fa2);
     color: #fff;
     box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+}
+
+.tag-blender {
+    background: linear-gradient(135deg, #ea7600, #ff9900);
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(234, 118, 0, 0.3);
 }
 
 /* Detail Page */
