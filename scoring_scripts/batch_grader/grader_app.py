@@ -173,7 +173,6 @@ class Evaluator:
             result = self.llm.generate_structured(prompt, schema=schema, files=files)
             
             # Post process format into consistent JSON format for data loader
-            import os
             class_name = os.path.basename(os.path.dirname(folder_path))
             
             group_info = result.setdefault("group_info", {})
@@ -271,7 +270,6 @@ class Evaluator:
             result = self.llm.generate_structured(prompt, schema=schema, files=files)
             
             # Post process format into consistent JSON format for data loader
-            import os
             class_name = os.path.basename(os.path.dirname(folder_path))
             
             group_info = result.setdefault("group_info", {})
@@ -369,7 +367,6 @@ class Evaluator:
             result = self.llm.generate_structured(prompt, schema=schema, files=files)
             
             # Post process format into consistent JSON format for data loader
-            import os
             class_name = os.path.basename(os.path.dirname(folder_path))
             
             group_info = result.setdefault("group_info", {})
