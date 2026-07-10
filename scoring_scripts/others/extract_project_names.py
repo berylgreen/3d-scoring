@@ -23,7 +23,7 @@ def extract_project_name(folder_name, all_student_names):
 
 def main():
     excel_path = r'\\ugreen-ff03\cc_4TRaid1\学生文件\考试学生答卷\2025-2026下\计算机三维动画设计基础\24数媒.xlsx'
-    work_dir = r'\\ugreen-ff03\cc_4TRaid1\学生文件\考试学生答卷\2025-2026下\计算机三维动画设计基础'
+    work_dir = r'\\ugreen-ff03\cc_4TRaid1\学生文件\考试学生答卷\2025-2026下\计算机三维动画设计基础\作品'
     
     print(f"Reading excel file: {excel_path}")
     df = pd.read_excel(excel_path, dtype=str)

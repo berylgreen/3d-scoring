@@ -128,6 +128,8 @@ class Evaluator:
                                     "adv_tech": {"type": "integer"},
                                     "fluency": {"type": "integer"},
                                     "rendering": {"type": "integer"},
+                                    "post_production": {"type": "integer"},
+                                    "visual_quality": {"type": "integer"},
                                     "document": {"type": "integer"}
                                 }
                             },
@@ -198,8 +200,10 @@ class Evaluator:
                         "scores": {
                             "type": "object",
                             "properties": {
-                                "theme_difficulty": {"type": "integer"},
+                                "theme_creativity": {"type": "integer"},
+                                "difficulty_workload": {"type": "integer"},
                                 "modeling_accuracy": {"type": "integer"},
+                                "model_details": {"type": "integer"},
                                 "topology": {"type": "integer"},
                                 "materials_textures": {"type": "integer"},
                                 "uv_mapping": {"type": "integer"},

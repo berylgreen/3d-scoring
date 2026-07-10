@@ -10,8 +10,8 @@ ANIMATION_INDIVIDUAL_PROMPT = """
 你是一位严格但公正的三维动画课程助教。请对学生的个人三维动画作品进行全面打分。
 【语言要求】：所有的评语和分析内容（workload_comment, comments, task_description, individual_comment）**必须使用简体中文**撰写。
 
-【评分标准】(满分100分 = 作品分80分 + 个人工作量分20分)
-1. 作品整体打分（满分80分），请按以下8个维度打分（每项0-10分的整数）：
+【评分标准】(满分100分 = 作品分100分 * 0.8 + 个人工作量分20分)
+1. 作品整体打分（满分100分），请按以下10个维度打分（每项0-10分的整数）：
 - 创意与剧本 (creativity, 0-10分)
 - 分镜与镜头 (storyboard, 0-10分)
 - 建模与场景 (modeling, 0-10分)
@@ -19,6 +19,8 @@ ANIMATION_INDIVIDUAL_PROMPT = """
 - 高级动画技术 (adv_tech, 0-10分)
 - 动画流畅度 (fluency, 0-10分)
 - 材质光影与渲染 (rendering, 0-10分)
+- 剪辑特效与音效配乐 (post_production, 0-10分)
+- 整体视觉质量 (visual_quality, 0-10分)
 - 文档整理 (document, 0-10分)
 
 2. 个人工作量评价（满分20分）：评价该学生的工作量、所用技术难度及最终成果，打出“个人评价分” (individual_score，必须为整数)。
@@ -41,6 +43,8 @@ ANIMATION_INDIVIDUAL_PROMPT = """
             "adv_tech": 0,
             "fluency": 0,
             "rendering": 0,
+            "post_production": 0,
+            "visual_quality": 0,
             "document": 0
         }},
         "workload_comment": "对整体工作量、技术难度等详细评价",
@@ -65,8 +69,8 @@ ANIMATION_GROUP_PROMPT = """
 你是一位严格但公正的三维动画课程助教。请对该小组的动画作品进行评分，并评价每位成员的贡献。
 【语言要求】：所有的评语和分析内容（workload_comment, comments, task_description, individual_comment）**必须使用简体中文**撰写。
 
-【评分标准】(满分100分 = 小组作品分80分 + 个人工作量分20分)
-1. 小组作品整体打分（满分80分），请按以下8个维度打分（每项0-10分的整数）：
+【评分标准】(满分100分 = 小组作品分100分 * 0.8 + 个人工作量分20分)
+1. 小组作品整体打分（满分100分），请按以下10个维度打分（每项0-10分的整数）：
 - 创意与剧本 (creativity, 0-10分)
 - 分镜与镜头 (storyboard, 0-10分)
 - 建模与场景 (modeling, 0-10分)
@@ -74,6 +78,8 @@ ANIMATION_GROUP_PROMPT = """
 - 高级动画技术 (adv_tech, 0-10分)
 - 动画流畅度 (fluency, 0-10分)
 - 材质光影与渲染 (rendering, 0-10分)
+- 剪辑特效与音效配乐 (post_production, 0-10分)
+- 整体视觉质量 (visual_quality, 0-10分)
 - 文档整理 (document, 0-10分)
 
 2. 个人工作量评价（满分20分）：提取并评价每位成员的具体工作量和贡献，打出“个人评价分” (individual_score，必须为整数)。
@@ -98,6 +104,8 @@ ANIMATION_GROUP_PROMPT = """
             "adv_tech": 0,
             "fluency": 0,
             "rendering": 0,
+            "post_production": 0,
+            "visual_quality": 0,
             "document": 0
         }},
         "workload_comment": "对项目整体工作量、作品时长和所用技术复杂度的详细评价",
@@ -122,16 +130,18 @@ MODELING_INDIVIDUAL_PROMPT = """
 你是一位严格但公正的三维建模技术课程助教。请对学生的个人三维建模作品进行打分。
 【语言要求】：所有的评语和分析内容（workload_comment, comments, task_description, individual_comment）**必须使用简体中文**撰写。
 
-【评分标准】(满分100分 = 作品分80分 + 个人工作量分20分)
-1. 作品整体打分（满分80分），请按以下8个维度打分（必须为整数）：
-- 主题难度 (theme_difficulty, 0-10分)
-- 建模准确性与完成度 (modeling_accuracy, 0-15分)
-- 拓扑结构合理性 (topology, 0-15分)
+【评分标准】(满分100分 = 作品分100分 * 0.8 + 个人工作量分20分)
+1. 作品整体打分（满分100分），请按以下10个维度打分（每项0-10分的整数）：
+- 主题创意 (theme_creativity, 0-10分)
+- 难度与工作量 (difficulty_workload, 0-10分)
+- 建模准确性与完成度 (modeling_accuracy, 0-10分)
+- 模型细节与表现力 (model_details, 0-10分)
+- 拓扑结构合理性 (topology, 0-10分)
 - 材质和贴图 (materials_textures, 0-10分)
 - 纹理映射/UV展开 (uv_mapping, 0-10分)
 - 光照渲染 (lighting_rendering, 0-10分)
-- 整体视觉质量 (visual_quality, 0-5分)
-- 文档整理 (documentation, 0-5分)
+- 整体视觉质量 (visual_quality, 0-10分)
+- 文档整理 (documentation, 0-10分)
 
 2. 个人工作量评价（满分20分）：评价该学生的工作量、所用技术难度及最终成果，打出“个人评价分” (individual_score，必须为整数)。
 
@@ -146,8 +156,10 @@ MODELING_INDIVIDUAL_PROMPT = """
 {{
     "group_info": {{
         "scores": {{
-            "theme_difficulty": 0,
+            "theme_creativity": 0,
+            "difficulty_workload": 0,
             "modeling_accuracy": 0,
+            "model_details": 0,
             "topology": 0,
             "materials_textures": 0,
             "uv_mapping": 0,
@@ -177,16 +189,18 @@ MODELING_GROUP_PROMPT = """
 你是一位严格但公正的三维建模技术课程助教。请根据以下小组提交的作品文档内容和文件列表，对该小组作品进行整体打分，并评价每位成员的贡献。
 【语言要求】：所有的评语和分析内容（workload_comment, comments, task_description, individual_comment）**必须使用简体中文**撰写。
 
-【评分标准】(满分100分 = 小组作品分80分 + 个人工作量分20分)
-1. 小组作品整体打分（满分80分），请按以下8个维度打分（必须为整数）：
-- 主题难度 (theme_difficulty, 0-10分)
-- 建模准确性与完成度 (modeling_accuracy, 0-15分)
-- 拓扑结构合理性 (topology, 0-15分)
+【评分标准】(满分100分 = 小组作品分100分 * 0.8 + 个人工作量分20分)
+1. 小组作品整体打分（满分100分），请按以下10个维度打分（每项0-10分的整数）：
+- 主题创意 (theme_creativity, 0-10分)
+- 难度与工作量 (difficulty_workload, 0-10分)
+- 建模准确性与完成度 (modeling_accuracy, 0-10分)
+- 模型细节与表现力 (model_details, 0-10分)
+- 拓扑结构合理性 (topology, 0-10分)
 - 材质和贴图 (materials_textures, 0-10分)
 - 纹理映射/UV展开 (uv_mapping, 0-10分)
 - 光照渲染 (lighting_rendering, 0-10分)
-- 整体视觉质量 (visual_quality, 0-5分)
-- 文档整理 (documentation, 0-5分)
+- 整体视觉质量 (visual_quality, 0-10分)
+- 文档整理 (documentation, 0-10分)
 
 2. 个人工作量评价（满分20分）：提取并评价每位成员的具体工作量和贡献，打出“个人评价分” (individual_score，必须为整数)。
 注意：如果文档中只写了工作内容没写名字，或者写了“独立完成”，请将所有工作量归功于已知唯一名单。
@@ -205,8 +219,10 @@ MODELING_GROUP_PROMPT = """
 {{
     "group_info": {{
         "scores": {{
-            "theme_difficulty": 0,
+            "theme_creativity": 0,
+            "difficulty_workload": 0,
             "modeling_accuracy": 0,
+            "model_details": 0,
             "topology": 0,
             "materials_textures": 0,
             "uv_mapping": 0,
