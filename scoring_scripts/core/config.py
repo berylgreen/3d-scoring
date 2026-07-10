@@ -2,13 +2,14 @@ import os
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+import yaml
 
 class Settings:
     """项目全局配置 (单例模式)"""
 
     def __init__(self):
         # 项目根目录 (core/ 的父目录)
-        self.PROJECT_ROOT = Path(__file__).parent.parent.resolve()
+        self.PROJECT_ROOT = Path(__file__).parent.parent.parent.resolve()
 
         # 确保项目根目录在 sys.path 中，以便各子模块能正确导入
         root_str = str(self.PROJECT_ROOT)
@@ -16,21 +17,32 @@ class Settings:
             sys.path.insert(0, root_str)
 
         # 加载 .env 文件
-        env_path = self.PROJECT_ROOT / ".env"
+        env_path = self.PROJECT_ROOT / "scoring_scripts" / ".env"
         load_dotenv(env_path, encoding='utf-8', override=True)
+
+        # 加载 config.yaml
+        config_path = self.PROJECT_ROOT / "config.yaml"
+        self.yaml_config = {}
+        if config_path.exists():
+            with open(config_path, 'r', encoding='utf-8') as f:
+                self.yaml_config = yaml.safe_load(f) or {}
+
+        # 辅助函数，优先从 yaml 读，后从 env 读，再用默认值
+        def get_cfg(key, default=None):
+            return self.yaml_config.get(key.lower(), os.getenv(key, default))
 
         # =====================
         # 课程类型与打分模式配置
         # =====================
         # COURSE_TYPE: "animation" | "modeling"
-        self.COURSE_TYPE = os.getenv("COURSE_TYPE", "animation").lower()
+        self.COURSE_TYPE = str(get_cfg("COURSE_TYPE", "animation")).lower()
         # GRADING_MODE: "individual" | "group"
-        self.GRADING_MODE = os.getenv("GRADING_MODE", "individual").lower()
+        self.GRADING_MODE = str(get_cfg("GRADING_MODE", "individual")).lower()
 
         # =====================
         # 路径配置
         # =====================
-        data_dir_raw = os.getenv("DATA_DIR", "data")
+        data_dir_raw = str(get_cfg("DATA_DIR", "data"))
         data_dir_path = Path(data_dir_raw)
         if data_dir_path.is_absolute():
             self.DATA_DIR = data_dir_path.resolve()
@@ -63,8 +75,13 @@ class Settings:
         # =====================
         # 评分行为配置
         # =====================
-        self.ENABLE_LLM_GRADING = os.getenv("ENABLE_LLM_GRADING", "true").lower() == "true"
-        self.API_DELAY_SECONDS = int(os.getenv("API_DELAY_SECONDS", "12"))
+        enable_llm_val = get_cfg("ENABLE_LLM_GRADING", True)
+        if isinstance(enable_llm_val, str):
+            self.ENABLE_LLM_GRADING = enable_llm_val.lower() == "true"
+        else:
+            self.ENABLE_LLM_GRADING = bool(enable_llm_val)
+            
+        self.API_DELAY_SECONDS = int(get_cfg("API_DELAY_SECONDS", 12))
 
         # 视频文件配置 (主要用于动画)
         self.VIDEO_EXTENSIONS = [".mkv", ".mp4", ".mov", ".avi"]
@@ -73,7 +90,7 @@ class Settings:
         # 批处理子目录
         # =====================
         self.BATCH_GRADER_DIR = self.PROJECT_ROOT / "batch_grader"
-        self.STUDENT_WEB_DIR = self.PROJECT_ROOT / "student_web"
+        self.STUDENT_WEB_DIR = self.PROJECT_ROOT / "scoring_web"
 
 # 全局单例
 settings = Settings()

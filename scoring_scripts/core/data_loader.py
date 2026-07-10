@@ -136,7 +136,7 @@ def collect_targets_from_disk() -> List[Dict]:
             continue
             
         # 忽略系统文件夹和无关文件夹
-        if folder_stripped in ("result", "thumbnail_cache", "batch_grader", "core", "student_web", "__pycache__", ".vscode", ".git", "config", "providers", "utils"):
+        if folder_stripped in ("result", "thumbnail_cache", "batch_grader", "core", "scoring_web", "__pycache__", ".vscode", ".git", "config", "providers", "utils"):
             continue
             
         targets.append({

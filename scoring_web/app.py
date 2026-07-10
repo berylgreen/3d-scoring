@@ -13,7 +13,7 @@ from pathlib import Path
 # Add project root to sys.path
 SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent
-sys.path.insert(0, str(PROJECT_ROOT))
+sys.path.insert(0, str(PROJECT_ROOT / "scoring"))
 
 from flask import Flask, render_template, request, jsonify, send_file, abort, Response
 from core.config import settings
