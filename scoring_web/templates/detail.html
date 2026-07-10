@@ -240,12 +240,12 @@
         }
 
         async function openFolder() {
-            if (!currentData || !currentData.folder_path) return;
+            if (!currentData || !currentData.target || !currentData.target.folder_path) return;
             try {
                 const res = await fetch('/api/open-folder', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ folder_path: currentData.folder_path })
+                    body: JSON.stringify({ folder_path: currentData.target.folder_path })
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -265,6 +265,12 @@
                 if (!res.ok) throw new Error("Not found");
                 currentData = await res.json();
                 renderDetail(currentData);
+                
+                // 自动进入编辑态（如果未确认）
+                const info = currentData.target.grading_result?.group_info || {};
+                if (info.confirmed !== 1 && info.confirmed !== true && !isEditing) {
+                    toggleEdit();
+                }
             } catch (e) {
                 console.error(e);
                 alert("加载作品数据失败");
@@ -274,7 +280,6 @@
         function renderDetail(data) {
             const target = data.target;
             const info = target.grading_result?.group_info || {};
-            currentData = { folder_path: target.folder_path }; // for openFolderBtn
             
             document.getElementById('groupName').innerText = target.name;
             document.getElementById('groupScore').innerText = Math.round(target.total_score || 0);
@@ -445,6 +450,36 @@
             if (data.media.personal_images) {
                 allImages = allImages.concat(Object.values(data.media.personal_images));
             }
+
+            // 绑定实时更新分数的事件
+            document.querySelectorAll('.score-input, .member-score-input').forEach(input => {
+                input.addEventListener('input', calculateLiveScores);
+            });
+        }
+
+        function calculateLiveScores() {
+            // 实时计算作品总分
+            let dimSum = 0;
+            document.querySelectorAll('.score-input').forEach(input => {
+                const val = parseInt(input.value) || 0;
+                dimSum += val;
+            });
+
+            document.getElementById('groupScore').innerText = dimSum;
+
+            // 实时更新成员个人总分
+            const groupBase = Math.round(dimSum * 0.8);
+            document.querySelectorAll('.member-card').forEach(card => {
+                const indInput = card.querySelector('.member-score-input');
+                if (indInput) {
+                    const indScore = parseInt(indInput.value) || 0;
+                    const totalScore = groupBase + indScore;
+                    const badge = card.querySelector('.total-score-badge');
+                    if (badge) {
+                        badge.innerText = totalScore + '分';
+                    }
+                }
+            });
         }
 
         function openLightbox(src) {

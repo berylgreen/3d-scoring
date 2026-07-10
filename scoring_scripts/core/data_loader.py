@@ -237,6 +237,17 @@ def find_thumbnail(folder_path: str) -> Optional[str]:
     if not os.path.exists(folder_path):
         return None
     
+    # 优先从“作品效果图”文件夹获取头图
+    render_images = find_render_images(folder_path)
+    if render_images:
+        # 先寻找包含“最终渲染”的图片
+        for img in render_images:
+            if "最终渲染" in os.path.basename(img):
+                return img
+        # 如果没有，返回该文件夹下第一张图
+        return render_images[0]
+        
+    # 如果没有找到“作品效果图”文件夹或其中没有图片，则回退为整个文件夹中的第一张图
     images = _fast_rglob(folder_path, IMAGE_EXTENSIONS)
     if images:
         return str(images[0])
