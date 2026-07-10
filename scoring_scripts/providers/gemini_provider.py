@@ -208,7 +208,7 @@ class GeminiProvider(BaseLLM):
                 else:
                     raise
 
-    def upload_file(self, file_path: str) -> types.File:
+    def upload_file(self, file_path: str, display_name: str = None) -> types.File:
         """上传文件到 Gemini File API"""
         import shutil
         import tempfile
@@ -222,7 +222,10 @@ class GeminiProvider(BaseLLM):
         try:
             shutil.copy2(file_path, temp_path)
             try:
-                uploaded_file = self.client.files.upload(file=temp_path)
+                upload_kwargs = {"file": temp_path}
+                if display_name:
+                    upload_kwargs["config"] = {"display_name": display_name}
+                uploaded_file = self.client.files.upload(**upload_kwargs)
             except KeyError as e:
                 if 'Upload URL did not returned' in str(e):
                     raise ValueError(f"代理服务器 ({self.base_url}) 未实现或不支持 Gemini 文件上传接口。无法上传视频文件。请使用原生官方接口，或将评分模式修改为 workload_only。") from e

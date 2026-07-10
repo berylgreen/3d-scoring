@@ -62,7 +62,7 @@ class BaseLLM(ABC):
         """
         raise NotImplementedError("该 Provider 尚未实现结构化输出")
 
-    def upload_file(self, file_path: str):
+    def upload_file(self, file_path: str, display_name: str = None):
         """
         上传文件 (用于需要预先上传文件的服务，如 Gemini File API)
         """

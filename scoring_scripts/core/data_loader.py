@@ -313,8 +313,28 @@ def find_personal_images(folder_path: str, members: List[Dict]) -> Dict[str, str
             img_name = img_path.name
             if "个人展示" in img_name and name in img_name:
                 images[name] = str(img_path)
+    return images
+
+def find_render_images(folder_path: str) -> List[str]:
+    """寻找 '03_作品效果图' 文件夹并返回其中的所有图片路径"""
+    images = []
+    if not folder_path or not os.path.exists(folder_path):
+        return images
+    
+    target_dir = None
+    for root, dirs, files in os.walk(folder_path):
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+        for d in dirs:
+            if "作品效果图" in d:
+                target_dir = os.path.join(root, d)
                 break
-                
+        if target_dir:
+            break
+            
+    if target_dir:
+        all_images = _fast_rglob(target_dir, IMAGE_EXTENSIONS)
+        images = [str(img) for img in all_images]
+        
     return images
 
 def find_max_files(folder_path: str) -> List[Dict[str, str]]:

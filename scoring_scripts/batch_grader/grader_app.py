@@ -17,7 +17,8 @@ from core.data_loader import (
     find_docx_file,
     extract_docx_content,
     JSON_DATA_PATH,
-    find_personal_docx_files
+    find_personal_docx_files,
+    find_render_images
 )
 from batch_grader import prompts
 import re
@@ -96,6 +97,18 @@ class Evaluator:
                 uploaded_video = self.llm.upload_file(video_path)
             except Exception as e:
                 print(f"  [警告] 视频上传失败: {e}")
+                
+        render_images = find_render_images(folder_path)
+        uploaded_images = []
+        if settings.ENABLE_LLM_GRADING:
+            for img_path in render_images:
+                try:
+                    display_name = os.path.basename(img_path)
+                    up_img = self.llm.upload_file(img_path, display_name=display_name)
+                    uploaded_images.append(up_img)
+                    print(f"  [图片上传] 成功上传效果图: {display_name}")
+                except Exception as e:
+                    print(f"  [警告] 图片 {img_path} 上传失败: {e}")
         
         try:
             if settings.GRADING_MODE == "individual":
@@ -153,7 +166,10 @@ class Evaluator:
                 }
             }
 
-            files = [uploaded_video] if uploaded_video else []
+            files = []
+            if uploaded_video:
+                files.append(uploaded_video)
+            files.extend(uploaded_images)
             result = self.llm.generate_structured(prompt, schema=schema, files=files)
             
             # Post process format into consistent JSON format for data loader
@@ -171,80 +187,107 @@ class Evaluator:
         finally:
             if uploaded_video:
                 self.llm.delete_file(uploaded_video)
+            for img in uploaded_images:
+                try:
+                    self.llm.delete_file(img)
+                except Exception:
+                    pass
 
     def _grade_modeling(self, target_name, folder_path, document_content):
         file_list = get_file_structure(folder_path)
         file_list_str = "\n".join(file_list[:100]) # limit to 100 files
         
-        if settings.GRADING_MODE == "group":
-            known_names = extract_names_from_string(target_name)
-            prompt = prompts.MODELING_GROUP_PROMPT.format(
-                target_name=target_name,
-                known_names=known_names,
-                file_list_str=file_list_str,
-                document_content=document_content
-            )
-        else:
-            # Individual modeling logic
-            prompt = prompts.MODELING_INDIVIDUAL_PROMPT.format(
-                file_list_str=file_list_str,
-                document_content=document_content
-            )
-            
-        schema = {
-            "type": "object",
-            "properties": {
-                "group_info": {
-                    "type": "object",
-                    "properties": {
-                        "scores": {
-                            "type": "object",
-                            "properties": {
-                                "theme_creativity": {"type": "integer"},
-                                "difficulty_workload": {"type": "integer"},
-                                "modeling_accuracy": {"type": "integer"},
-                                "model_details": {"type": "integer"},
-                                "topology": {"type": "integer"},
-                                "materials_textures": {"type": "integer"},
-                                "uv_mapping": {"type": "integer"},
-                                "lighting_rendering": {"type": "integer"},
-                                "visual_quality": {"type": "integer"},
-                                "documentation": {"type": "integer"}
-                            }
-                        },
-                        "workload_comment": {"type": "string"},
-                        "comments": {"type": "string"}
-                    }
-                },
-                "individuals": {
-                    "type": "array",
-                    "items": {
+        render_images = find_render_images(folder_path)
+        uploaded_images = []
+        if settings.ENABLE_LLM_GRADING:
+            for img_path in render_images:
+                try:
+                    display_name = os.path.basename(img_path)
+                    up_img = self.llm.upload_file(img_path, display_name=display_name)
+                    uploaded_images.append(up_img)
+                    print(f"  [图片上传] 成功上传效果图: {display_name}")
+                except Exception as e:
+                    print(f"  [警告] 图片 {img_path} 上传失败: {e}")
+        
+        try:
+            if settings.GRADING_MODE == "group":
+                known_names = extract_names_from_string(target_name)
+                prompt = prompts.MODELING_GROUP_PROMPT.format(
+                    target_name=target_name,
+                    known_names=known_names,
+                    file_list_str=file_list_str,
+                    document_content=document_content
+                )
+            else:
+                # Individual modeling logic
+                prompt = prompts.MODELING_INDIVIDUAL_PROMPT.format(
+                    file_list_str=file_list_str,
+                    document_content=document_content
+                )
+                
+            schema = {
+                "type": "object",
+                "properties": {
+                    "group_info": {
                         "type": "object",
                         "properties": {
-                            "student_id": {"type": "string"},
-                            "student_name": {"type": "string"},
-                            "task_description": {"type": "string"},
-                            "individual_score": {"type": "integer"},
-                            "individual_comment": {"type": "string"}
+                            "scores": {
+                                "type": "object",
+                                "properties": {
+                                    "theme_creativity": {"type": "integer"},
+                                    "difficulty_workload": {"type": "integer"},
+                                    "modeling_accuracy": {"type": "integer"},
+                                    "model_details": {"type": "integer"},
+                                    "topology": {"type": "integer"},
+                                    "materials_textures": {"type": "integer"},
+                                    "uv_mapping": {"type": "integer"},
+                                    "lighting_rendering": {"type": "integer"},
+                                    "visual_quality": {"type": "integer"},
+                                    "documentation": {"type": "integer"}
+                                }
+                            },
+                            "workload_comment": {"type": "string"},
+                            "comments": {"type": "string"}
+                        }
+                    },
+                    "individuals": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "student_id": {"type": "string"},
+                                "student_name": {"type": "string"},
+                                "task_description": {"type": "string"},
+                                "individual_score": {"type": "integer"},
+                                "individual_comment": {"type": "string"}
+                            }
                         }
                     }
                 }
             }
-        }
+                
+            files = []
+            files.extend(uploaded_images)
+            result = self.llm.generate_structured(prompt, schema=schema, files=files)
             
-        result = self.llm.generate_structured(prompt, schema=schema)
+            # Post process format into consistent JSON format for data loader
+            import os
+            class_name = os.path.basename(os.path.dirname(folder_path))
+            
+            group_info = result.setdefault("group_info", {})
+            group_info["group_name"] = target_name
+            scores = group_info.get("scores", {})
+            group_info["total_group_score"] = sum(scores.values()) if scores else 0
+            group_info["folder_path"] = folder_path
+            
+            return result
         
-        # Post process format into consistent JSON format for data loader
-        import os
-        class_name = os.path.basename(os.path.dirname(folder_path))
-        
-        group_info = result.setdefault("group_info", {})
-        group_info["group_name"] = target_name
-        scores = group_info.get("scores", {})
-        group_info["total_group_score"] = sum(scores.values()) if scores else 0
-        group_info["folder_path"] = folder_path
-        
-        return result
+        finally:
+            for img in uploaded_images:
+                try:
+                    self.llm.delete_file(img)
+                except Exception:
+                    pass
 
     def _grade_3d_comprehensive(self, target_name, folder_path, document_content):
         # 3D综合 模式下，也会上传视频
@@ -255,6 +298,18 @@ class Evaluator:
                 uploaded_video = self.llm.upload_file(video_path)
             except Exception as e:
                 print(f"  [警告] 视频上传失败: {e}")
+                
+        render_images = find_render_images(folder_path)
+        uploaded_images = []
+        if settings.ENABLE_LLM_GRADING:
+            for img_path in render_images:
+                try:
+                    display_name = os.path.basename(img_path)
+                    up_img = self.llm.upload_file(img_path, display_name=display_name)
+                    uploaded_images.append(up_img)
+                    print(f"  [图片上传] 成功上传效果图: {display_name}")
+                except Exception as e:
+                    print(f"  [警告] 图片 {img_path} 上传失败: {e}")
         
         try:
             if settings.GRADING_MODE == "individual":
@@ -307,7 +362,10 @@ class Evaluator:
                 }
             }
 
-            files = [uploaded_video] if uploaded_video else []
+            files = []
+            if uploaded_video:
+                files.append(uploaded_video)
+            files.extend(uploaded_images)
             result = self.llm.generate_structured(prompt, schema=schema, files=files)
             
             # Post process format into consistent JSON format for data loader
@@ -325,6 +383,11 @@ class Evaluator:
         finally:
             if uploaded_video:
                 self.llm.delete_file(uploaded_video)
+            for img in uploaded_images:
+                try:
+                    self.llm.delete_file(img)
+                except Exception:
+                    pass
 
 def run_batch():
     print("=" * 60)
