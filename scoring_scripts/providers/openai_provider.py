@@ -108,23 +108,59 @@ class OpenAIProvider(BaseLLM):
             messages.append({"role": "system", "content": system_instruction})
             
         schema_prompt = f"{prompt}\n\n请务必返回合法的 JSON 格式数据，并严格遵循以下 JSON Schema 结构（不要添加任何 Markdown 代码块包裹）：\n{json.dumps(schema, ensure_ascii=False, indent=2)}"
-        messages.append({"role": "user", "content": schema_prompt})
+        user_content = [{"type": "text", "text": schema_prompt}]
         
         if files:
-            print("  [警告] 当前配置的 OpenAI 提供商尚未实现本地视频文件直接上传，视频评分将可能受限！")
+            import base64
+            import mimetypes
+            import os
+            for file_item in files:
+                file_path = file_item if isinstance(file_item, str) else getattr(file_item, 'uri', None)
+                if not file_path or not os.path.exists(file_path):
+                    continue
+                mime_type, _ = mimetypes.guess_type(file_path)
+                if not mime_type:
+                    ext = os.path.splitext(file_path)[1].lower()
+                    if ext in ['.jpg', '.jpeg']:
+                        mime_type = "image/jpeg"
+                    elif ext == '.png':
+                        mime_type = "image/png"
+                    else:
+                        mime_type = "image/jpeg"
+                
+                if mime_type.startswith("image/"):
+                    try:
+                        with open(file_path, "rb") as image_file:
+                            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+                        user_content.append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime_type};base64,{encoded_string}"
+                            }
+                        })
+                    except Exception as e:
+                        print(f"  [错误] 读取图片失败: {file_path} ({e})")
+                else:
+                    print(f"  [警告] 当前配置的 OpenAI 提供商不支持非图片文件直接上传: {file_path}")
+
+        messages.append({"role": "user", "content": user_content})
             
         import time
         import sys
-        max_retries = 1
+        max_retries = 2
         base_delay = 5
+        use_json_object = True
         
         for attempt in range(max_retries + 1):
             try:
-                response = self.client.chat.completions.create(
-                    model=self.model_name,
-                    messages=messages,
-                    response_format={"type": "json_object"}
-                )
+                kwargs = {
+                    "model": self.model_name,
+                    "messages": messages,
+                }
+                if use_json_object:
+                    kwargs["response_format"] = {"type": "json_object"}
+                    
+                response = self.client.chat.completions.create(**kwargs)
                 content = response.choices[0].message.content or ""
                 # 提取 JSON 内容（寻找第一个 { 和最后一个 }）
                 start_idx = content.find('{')
@@ -144,16 +180,19 @@ class OpenAIProvider(BaseLLM):
                     else:
                         print(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
                         sys.exit(1)
-                raise RuntimeError(f"OpenAI API 结构化调用失败: {e}") from e
+                elif use_json_object and ("400" in error_msg or "response_format" in error_msg or "not supported" in error_msg):
+                    if attempt < max_retries:
+                        print(f"  [警告] API 可能不支持 response_format={{'type': 'json_object'}}，尝试降级为普通文本模式重试...")
+                        use_json_object = False
+                        continue
+                    else:
+                        raise RuntimeError(f"OpenAI API 结构化调用失败(尝试降级失败): {e}") from e
+                else:
+                    raise RuntimeError(f"OpenAI API 结构化调用失败: {e}") from e
 
-    def upload_file(self, file_path: str):
-        """上传文件（占位符，OpenAI Chat 不原生支持文件）"""
-        print(f"  [警告] OpenAI 提供商暂不支持直接上传文件 ({file_path})")
-        class DummyFile:
-            def __init__(self, path):
-                self.uri = path
-                self.mime_type = "video/mp4"
-        return DummyFile(file_path)
+    def upload_file(self, file_path: str, display_name: str = None):
+        """上传文件（OpenAI Chat 不原生支持文件对象上传，此处直接返回路径供生成时进行 Base64 编码）"""
+        return file_path
 
     def delete_file(self, file_name: str):
         """删除文件（占位符）"""
