@@ -303,7 +303,7 @@
             tbody.innerHTML = students.map((s, idx) => {
                 const individualScore = Math.round(s.individual_score || 0);
                 const groupScore = Math.round(s.group_score || 0);
-                const totalScore = individualScore + groupScore;
+                let totalScore = Math.round(groupScore * 0.8) + individualScore;
                 return `
                 <tr>
                     <td class="rank-cell">${idx + 1}</td>

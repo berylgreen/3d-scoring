@@ -106,7 +106,7 @@ def api_students():
                 "target_id": target_id,
                 "group_score": group_score,
                 "individual_score": 0,
-                "total_score": group_score,
+                "total_score": round(group_score * 0.8),
                 "confirmed": confirmed
             })
             continue
@@ -151,7 +151,7 @@ def api_students():
                 "target_id": target_id,
                 "group_score": group_score,
                 "individual_score": ind_score,
-                "total_score": group_score + ind_score,
+                "total_score": round(group_score * 0.8) + ind_score,
                 "confirmed": confirmed
             })
             

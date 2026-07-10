@@ -89,7 +89,7 @@ class Settings:
         # =====================
         # 批处理子目录
         # =====================
-        self.BATCH_GRADER_DIR = self.PROJECT_ROOT / "batch_grader"
+        self.BATCH_GRADER_DIR = self.PROJECT_ROOT / "scoring_scripts" / "batch_grader"
         self.STUDENT_WEB_DIR = self.PROJECT_ROOT / "scoring_web"
 
 # 全局单例

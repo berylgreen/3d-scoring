@@ -168,6 +168,8 @@
                 { key: 'adv_tech', label: '高级动画技术' },
                 { key: 'fluency', label: '动画流畅度' },
                 { key: 'rendering', label: '材质光影与渲染' },
+                { key: 'post_production', label: '剪辑特效与音效配乐' },
+                { key: 'visual_quality', label: '整体视觉质量' },
                 { key: 'document', label: '文档整理' }
             ];
         } else if (courseType === '3d_comprehensive') {
@@ -180,11 +182,13 @@
             ];
         } else {
             SCORE_KEYS_ORDER = [
-                { key: 'theme_difficulty', label: '主题难度' },
+                { key: 'theme_creativity', label: '主题创意' },
+                { key: 'difficulty_workload', label: '难度与工作量' },
                 { key: 'modeling_accuracy', label: '建模准确性与完成度' },
-                { key: 'topology', label: '拓扑结构合理' },
+                { key: 'model_details', label: '模型细节与表现力' },
+                { key: 'topology', label: '拓扑结构合理性' },
                 { key: 'materials_textures', label: '材质和贴图' },
-                { key: 'uv_mapping', label: '纹理映射 (UV)' },
+                { key: 'uv_mapping', label: '纹理映射/UV展开' },
                 { key: 'lighting_rendering', label: '光照渲染' },
                 { key: 'visual_quality', label: '整体视觉质量' },
                 { key: 'documentation', label: '文档整理' }
@@ -406,10 +410,7 @@
             membersContainer.innerHTML = (target.individuals || []).map((m, idx) => {
                 const imgUrl = data.media.personal_images ? data.media.personal_images[m.student_name] : null;
                 const indScore = Math.round(m.individual_score || 0);
-                let totalScore = groupScore + indScore;
-                if (courseType === '3d_comprehensive') {
-                    totalScore = Math.round(groupScore * 0.8) + indScore;
-                }
+                let totalScore = Math.round(groupScore * 0.8) + indScore;
                 
                 let indScoreDisplay = `<span class="val-display">个人: ${indScore} 分</span>`;
                 
