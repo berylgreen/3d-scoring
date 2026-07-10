@@ -185,9 +185,24 @@ def api_students():
 def open_folder():
     path = request.json.get('folder_path')
     if path and os.path.exists(path):
-        # 优先打开包含 Word 文档的子目录
-        docx_path = find_docx_file(path)
-        open_path = os.path.dirname(docx_path) if docx_path and os.path.exists(docx_path) else path
+        # 优先打开包含 "作品效果图" 的目录
+        target_dir = None
+        for root, dirs, files in os.walk(path):
+            dirs[:] = [d for d in dirs if d not in ('__pycache__', '.git', '.vscode', 'node_modules', 'Library', 'Logs', 'Temp', 'obj', 'Packages', 'build', 'UserSettings', 'ProjectSettings')]
+            for d in dirs:
+                if "作品效果图" in d:
+                    target_dir = os.path.join(root, d)
+                    break
+            if target_dir:
+                break
+                
+        if target_dir and os.path.exists(target_dir):
+            open_path = target_dir
+        else:
+            # 否则优先打开包含 Word 文档的子目录
+            docx_path = find_docx_file(path)
+            open_path = os.path.dirname(docx_path) if docx_path and os.path.exists(docx_path) else path
+            
         os.startfile(open_path)
         return jsonify({"success": True})
     return jsonify({"success": False, "error": "Folder not found"}), 404

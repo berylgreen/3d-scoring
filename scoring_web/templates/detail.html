@@ -455,6 +455,13 @@
             document.querySelectorAll('.score-input, .member-score-input').forEach(input => {
                 input.addEventListener('input', calculateLiveScores);
             });
+
+            // 绑定 Textarea 自动高度
+            document.querySelectorAll('textarea.edit-input').forEach(textarea => {
+                textarea.addEventListener('input', function() {
+                    autoResizeTextarea(this);
+                });
+            });
         }
 
         function calculateLiveScores() {
@@ -604,6 +611,11 @@
             });
         });
 
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+        }
+
         function toggleEdit() {
             isEditing = !isEditing;
             const displayEls = document.querySelectorAll('.val-display, .score-val-display, #groupCommentsDisplay');
@@ -615,7 +627,12 @@
 
             if (isEditing) {
                 displayEls.forEach(el => el.classList.add('hidden'));
-                inputEls.forEach(el => el.classList.remove('hidden'));
+                inputEls.forEach(el => {
+                    el.classList.remove('hidden');
+                    if (el.tagName === 'TEXTAREA') {
+                        autoResizeTextarea(el);
+                    }
+                });
             } else {
                 displayEls.forEach(el => el.classList.remove('hidden'));
                 inputEls.forEach(el => el.classList.add('hidden'));

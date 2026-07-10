@@ -680,6 +680,10 @@ body {
     font-size: inherit;
 }
 
+textarea.edit-input {
+    overflow-y: hidden;
+}
+
 .score-row .edit-input {
     width: 60px;
     text-align: center;
