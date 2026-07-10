@@ -3,8 +3,8 @@
 大模型自动评分启动脚本
 
 使用方式:
-    python run.py              # 断点续跑: 不清空缓存，跳过已评分小组继续运行
-    python run.py --regrade    # 强制重新评分: 清空缓存 + 重新评分
+    python run_3d_scoring.py              # 断点续跑: 不清空缓存，跳过已评分小组继续运行
+    python run_3d_scoring.py --regrade    # 强制重新评分: 清空缓存 + 重新评分
 """
 
 import argparse
@@ -105,8 +105,8 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  python run.py              # 断点续跑: 不清空缓存，跳过已评分小组继续运行
-  python run.py --regrade    # 强制重新评分: 清空缓存 + 重新评分
+  python run_3d_scoring.py              # 断点续跑: 不清空缓存，跳过已评分小组继续运行
+  python run_3d_scoring.py --regrade    # 强制重新评分: 清空缓存 + 重新评分
         """
     )
     parser.add_argument(
