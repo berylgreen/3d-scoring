@@ -320,9 +320,17 @@ body {
 
 .detail-layout {
     display: grid;
-    grid-template-columns: 350px 1fr;
+    grid-template-columns: 1fr 350px;
     gap: 40px;
     align-items: start;
+}
+
+.info-sidebar {
+    order: 2;
+}
+
+.main-content {
+    order: 1;
 }
 
 .detail-title {
@@ -696,6 +704,14 @@ body {
 @media (max-width: 900px) {
     .detail-layout {
         grid-template-columns: 1fr;
+    }
+    
+    .info-sidebar {
+        order: 1;
+    }
+    
+    .main-content {
+        order: 2;
     }
 }
 
