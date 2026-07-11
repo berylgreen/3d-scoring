@@ -1,12 +1,28 @@
 import json
 import os
 import re
-import shutil
+import sys
+from pathlib import Path
 import pandas as pd
 
+# 引入项目配置
+SCRIPT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = SCRIPT_DIR.parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
+
+from core.config import settings
+from core.data_loader import JSON_DATA_PATH
+
 def fix_missing_student_ids():
-    json_path = r'z:\学生文件\考试学生答卷\2025-2026下\三维动画技术\result\grading_results.json'
-    excel_path = r'z:\学生文件\考试学生答卷\2025-2026下\三维动画技术\student.xlsx'
+    json_path = str(JSON_DATA_PATH)
+    data_dir = Path(settings.DATA_DIR)
+    
+    # 查找 data_dir 下的 xlsx 文件
+    excel_files = list(data_dir.glob('*.xlsx'))
+    if not excel_files:
+        print(f"在 {data_dir} 下未找到 xlsx 文件。")
+        return
+    excel_path = str(excel_files[0])
     
     print("开始从 Excel 加载官方学生名单...")
     df = pd.read_excel(excel_path)

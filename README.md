@@ -8,6 +8,11 @@
 - **`scoring_scripts/`**: 自动化评分核心后端脚本集。
   - `batch_grader/grader_app.py`: 批处理评分核心，自动收集数据、组织提示词并调用大模型（多模态能力）对提交的报告、图片、视频进行分析并得出结构化分数。
   - `batch_grader/prompts.py`: 定义各课程不同模式（小组/个人）的评分 Prompt 模板。
+  - **`others/`**: 包含数据整理和后处理的辅助工具脚本：
+    - `1_format_student_folders.py`: 用于初期规整学生提交的原始数据目录结构，使之符合评分工具的输入要求。
+    - `2_extract_project_names.py`: 使用启发式规则，从繁杂的学生提交目录名中提取真实的作品/项目名称。
+    - `3_fix_missingIds_unnecessaryName.py`: 读取官方教务名单 (`student.xlsx`)，修复评分结果 JSON 中遗漏或解析错误的学号信息。
+    - `4_detect_blender_files.py`: 扫描提交目录，检测并记录是否包含 Blender（或 3ds Max）源工程文件以供前端判断。
 - **`scoring_web/`**: 基于 Flask 构建的 Web 管理端。
   - `app.py`: Web 端主程序，提供学生列表、目标详情、媒体资源加载、成绩手动修正及重新评分的 RESTful 接口。
 - **`server.bat`**: Windows 环境下快速启动 Web 服务的批处理脚本。
