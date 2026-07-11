@@ -361,7 +361,7 @@ def api_thumbnail(target_id):
     if settings.COURSE_TYPE in ("animation", "3d_comprehensive"):
         video_path = find_video_file(target.get("folder_path"))
         if video_path and os.path.exists(video_path):
-            cache_dir = os.path.join(PROJECT_ROOT, "thumbnail_cache")
+            cache_dir = str(settings.THUMBNAIL_CACHE_DIR)
             os.makedirs(cache_dir, exist_ok=True)
             safe_id = target_id.replace('/', '_').replace('\\', '_')
             cached_thumb = os.path.join(cache_dir, f"{safe_id}_frame_5s.jpg")
