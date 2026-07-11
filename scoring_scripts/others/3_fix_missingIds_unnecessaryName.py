@@ -49,6 +49,8 @@ def fix_missing_student_ids():
         data = json.load(f)
 
     changed = False
+    total_fixed = 0
+    total_deleted = 0
     
     for group in data:
         group_name = group.get('group_info', {}).get('group_name')
@@ -68,6 +70,7 @@ def fix_missing_student_ids():
                         ind['student_id'] = matched_id
                         print(f"成功修复 -> 组别: {group_name} | 姓名: {stu_name} | 原学号: {sid if sid and sid != 'N/A' else '无'} -> 新学号: {matched_id}")
                         changed = True
+                        total_fixed += 1
                 elif len(possible_ids) > 1:
                     print(f"修复失败 -> 姓名 '{stu_name}' 在名单中存在重名，无法唯一确定学号。")
                 elif not possible_ids:
@@ -98,8 +101,9 @@ def fix_missing_student_ids():
                 valid_inds = original_inds
             else:
                 for ind in deleted_inds:
-                    print(f"清理错误人名 (可能是项目名/乱码) -> 组别: {group_name} | 删除姓名: '{ind.get('student_name', '')}'")
+                    print(f"明确删除数据 -> 组别: {group_name} | 删除姓名 (可能是项目名/乱码): '{ind.get('student_name', '')}'")
                     changed = True
+                    total_deleted += 1
                 
         if len(valid_inds) != original_len:
             group['individuals'] = valid_inds
@@ -107,7 +111,12 @@ def fix_missing_student_ids():
     if changed:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        print("\n修复与清理完成，已更新 grading_results.json")
+        print("\n====================================")
+        print("修复与清理完成，已更新 grading_results.json")
+        print(f"统计: 成功修复学号 {total_fixed} 条")
+        if total_deleted > 0:
+            print(f"警告: 明确删除了无效数据 {total_deleted} 条！请检查上方日志确认是否误删。")
+        print("====================================")
     else:
         print("\n没有需要修复或清理的数据。")
 
