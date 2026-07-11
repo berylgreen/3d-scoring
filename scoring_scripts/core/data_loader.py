@@ -258,16 +258,19 @@ def find_effect_images(folder_path: str) -> List[str]:
     if not folder_path or not os.path.exists(folder_path):
         return [""] * 4
     
-    # 优先在“作品效果图”文件夹找
+    # 优先在“作品效果图”文件夹找，其次是“从文档提取的图片”
     target_dir = None
+    extracted_dir = None
     for root, dirs, files in os.walk(folder_path):
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
         for d in dirs:
             if "作品效果图" in d:
                 target_dir = os.path.join(root, d)
-                break
-        if target_dir:
-            break
+            elif "从文档提取的图片" in d:
+                extracted_dir = os.path.join(root, d)
+                
+    if not target_dir and extracted_dir:
+        target_dir = extracted_dir
             
     if target_dir:
         # 找到了文件夹，获取里面的所有图片
@@ -357,20 +360,48 @@ def find_render_images(folder_path: str) -> List[str]:
         return images
     
     target_dir = None
+    extracted_dir = None
     for root, dirs, files in os.walk(folder_path):
         dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
         for d in dirs:
             if "作品效果图" in d:
                 target_dir = os.path.join(root, d)
-                break
-        if target_dir:
-            break
+            elif "从文档提取的图片" in d:
+                extracted_dir = os.path.join(root, d)
             
     if target_dir:
         all_images = _fast_rglob(target_dir, IMAGE_EXTENSIONS)
-        images = [str(img) for img in all_images]
+        if all_images:
+            return [str(img) for img in all_images]
+            
+    if extracted_dir:
+        all_images = _fast_rglob(extracted_dir, IMAGE_EXTENSIONS)
+        if all_images:
+            return [str(img) for img in all_images]
         
     return images
+
+def extract_and_save_docx_images(docx_path: str, output_dir: str) -> List[str]:
+    """从 docx 提取图片并保存到 output_dir，返回保存的文件路径列表"""
+    saved_images = []
+    try:
+        doc = Document(docx_path)
+        os.makedirs(output_dir, exist_ok=True)
+        img_index = 0
+        for rel in doc.part.rels.values():
+            if "image" in rel.reltype:
+                image_data = rel.target_part.blob
+                content_type = rel.target_part.content_type
+                ext = content_type.split('/')[-1] if content_type else "png"
+                if ext == "jpeg": ext = "jpg"
+                img_path = os.path.join(output_dir, f"doc_img_{img_index}.{ext}")
+                with open(img_path, "wb") as f:
+                    f.write(image_data)
+                saved_images.append(img_path)
+                img_index += 1
+    except Exception as e:
+        print(f"Error extracting images from {docx_path}: {e}")
+    return saved_images
 
 def find_max_files(folder_path: str) -> List[Dict[str, str]]:
     if not folder_path:

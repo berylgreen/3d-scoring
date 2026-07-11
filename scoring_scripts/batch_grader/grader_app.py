@@ -80,6 +80,33 @@ class Evaluator:
                 combined_content += f"【组员 {student_name} 的个人论述文档】:\n{p_content}\n\n"
             document_content = combined_content
 
+        # 增加未提交图片的惩罚逻辑与提取逻辑
+        from core.data_loader import extract_and_save_docx_images
+        
+        render_images = find_render_images(folder_path)
+        extracted_from_doc = False
+        
+        if not render_images and docx_path:
+            output_dir = os.path.join(folder_path, "从文档提取的图片")
+            if not os.path.exists(output_dir) or not os.listdir(output_dir):
+                extract_and_save_docx_images(docx_path, output_dir)
+            
+            # 重新获取图片列表
+            render_images = find_render_images(folder_path)
+            
+        if render_images and any("从文档提取的图片" in img for img in render_images):
+            extracted_from_doc = True
+            
+        if extracted_from_doc:
+            penalty_msg = "\n\n[系统特别提示]：该作品未按要求独立提交渲染图片，当前给到你的效果图是本系统直接从其Word文档中提取出来的。因此，请在**文档整理/规范性（如 document, documentation 等相关评分项）**的评分中给予惩罚，该项评分不得超过5分（满分一般10分，请给0-5分区间的值）。"
+            document_content += penalty_msg
+        elif not render_images:
+            from core.data_loader import find_video_file
+            video_path = find_video_file(folder_path)
+            if not video_path:
+                penalty_msg = "\n\n[严重警告]：该学生/小组【完全没有提交任何视觉作品】（既没有视频，也没有任何效果图片，连文档里都没有图片）。你无法看到任何实际作品成果，只能看到文字报告。因此，你**必须**在所有视觉、技术和表现相关的评分项（如建模、材质、动画、渲染、视觉质量、工作量等）给出0分，**绝不能仅凭文档中的文字自述或自夸给出任何分数**！"
+                document_content += penalty_msg
+
         # 区分课程和模式
         if settings.COURSE_TYPE == "animation":
             return self._grade_animation(target_name, folder_path, document_content)
