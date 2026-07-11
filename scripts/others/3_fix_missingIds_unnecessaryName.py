@@ -12,6 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from core.config import settings
 from core.data_loader import JSON_DATA_PATH
+from core.logger import logger
 
 def fix_missing_student_ids():
     json_path = str(JSON_DATA_PATH)
@@ -20,11 +21,11 @@ def fix_missing_student_ids():
     # 查找 data_dir 下的 xlsx 文件
     excel_files = list(data_dir.glob('*.xlsx'))
     if not excel_files:
-        print(f"在 {data_dir} 下未找到 xlsx 文件。")
+        logger.info(f"在 {data_dir} 下未找到 xlsx 文件。")
         return
     excel_path = str(excel_files[0])
     
-    print("开始从 Excel 加载官方学生名单...")
+    logger.info("开始从 Excel 加载官方学生名单...")
     df = pd.read_excel(excel_path)
     official_students = {}
     official_names_to_ids = {}
@@ -43,7 +44,7 @@ def fix_missing_student_ids():
                 official_names_to_ids[sname] = []
             official_names_to_ids[sname].append(sid)
 
-    print(f"成功加载 {len(official_students)} 名学生信息。")
+    logger.info(f"成功加载 {len(official_students)} 名学生信息。")
 
     with open(json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
@@ -68,13 +69,13 @@ def fix_missing_student_ids():
                     matched_id = possible_ids[0]
                     if sid != matched_id:
                         ind['student_id'] = matched_id
-                        print(f"成功修复 -> 组别: {group_name} | 姓名: {stu_name} | 原学号: {sid if sid and sid != 'N/A' else '无'} -> 新学号: {matched_id}")
+                        logger.info(f"成功修复 -> 组别: {group_name} | 姓名: {stu_name} | 原学号: {sid if sid and sid != 'N/A' else '无'} -> 新学号: {matched_id}")
                         changed = True
                         total_fixed += 1
                 elif len(possible_ids) > 1:
-                    print(f"修复失败 -> 姓名 '{stu_name}' 在名单中存在重名，无法唯一确定学号。")
+                    logger.warning(f"修复失败 -> 姓名 '{stu_name}' 在名单中存在重名，无法唯一确定学号。")
                 elif not possible_ids:
-                    print(f"未能修复 -> 组别: {group_name} | 姓名: {stu_name} (在Excel名单中未找到该姓名)")
+                    logger.info(f"未能修复 -> 组别: {group_name} | 姓名: {stu_name} (在Excel名单中未找到该姓名)")
 
         # Cleanup phase: remove individuals that are likely project names / garbage
         official_names = set(official_students.values())
@@ -101,7 +102,7 @@ def fix_missing_student_ids():
                 valid_inds = original_inds
             else:
                 for ind in deleted_inds:
-                    print(f"明确删除数据 -> 组别: {group_name} | 删除姓名 (可能是项目名/乱码): '{ind.get('student_name', '')}'")
+                    logger.info(f"明确删除数据 -> 组别: {group_name} | 删除姓名 (可能是项目名/乱码): '{ind.get('student_name', '')}'")
                     changed = True
                     total_deleted += 1
                 
@@ -111,14 +112,14 @@ def fix_missing_student_ids():
     if changed:
         with open(json_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
-        print("\n====================================")
-        print("修复与清理完成，已更新 grading_results.json")
-        print(f"统计: 成功修复学号 {total_fixed} 条")
+        logger.info("\n====================================")
+        logger.info("修复与清理完成，已更新 grading_results.json")
+        logger.info(f"统计: 成功修复学号 {total_fixed} 条")
         if total_deleted > 0:
-            print(f"警告: 明确删除了无效数据 {total_deleted} 条！请检查上方日志确认是否误删。")
-        print("====================================")
+            logger.warning(f"警告: 明确删除了无效数据 {total_deleted} 条！请检查上方日志确认是否误删。")
+        logger.info("====================================")
     else:
-        print("\n没有需要修复或清理的数据。")
+        logger.info("\n没有需要修复或清理的数据。")
 
 if __name__ == '__main__':
     fix_missing_student_ids()

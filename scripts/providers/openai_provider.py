@@ -8,6 +8,7 @@ from typing import Iterator
 from openai import OpenAI
 
 from core.base_llm import BaseLLM
+from core.logger import logger
 
 
 class OpenAIProvider(BaseLLM):
@@ -139,9 +140,9 @@ class OpenAIProvider(BaseLLM):
                             }
                         })
                     except Exception as e:
-                        print(f"  [错误] 读取图片失败: {file_path} ({e})")
+                        logger.error(f"  [错误] 读取图片失败: {file_path} ({e})")
                 else:
-                    print(f"  [警告] 当前配置的 OpenAI 提供商不支持非图片文件直接上传: {file_path}")
+                    logger.warning(f"  [警告] 当前配置的 OpenAI 提供商不支持非图片文件直接上传: {file_path}")
 
         messages.append({"role": "user", "content": user_content})
             
@@ -174,15 +175,15 @@ class OpenAIProvider(BaseLLM):
                 if ("429" in error_msg or "rate limit" in error_msg):
                     if attempt < max_retries:
                         delay = base_delay * (2 ** attempt)
-                        print(f"  [重试] 遇到 429 频率限制，等待 {delay} 秒后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                        logger.info(f"  [重试] 遇到 429 频率限制，等待 {delay} 秒后重试 (第 {attempt + 1}/{max_retries} 次)...")
                         time.sleep(delay)
                         continue
                     else:
-                        print(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
+                        logger.error(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
                         sys.exit(1)
                 elif use_json_object and ("400" in error_msg or "response_format" in error_msg or "not supported" in error_msg):
                     if attempt < max_retries:
-                        print(f"  [警告] API 可能不支持 response_format={{'type': 'json_object'}}，尝试降级为普通文本模式重试...")
+                        logger.warning(f"  [警告] API 可能不支持 response_format={{'type': 'json_object'}}，尝试降级为普通文本模式重试...")
                         use_json_object = False
                         continue
                     else:

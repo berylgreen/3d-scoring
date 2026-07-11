@@ -9,6 +9,7 @@ from typing import Any
 
 import yaml
 from dotenv import load_dotenv
+from core.logger import logger
 
 
 class ConfigLoader:
@@ -40,7 +41,7 @@ class ConfigLoader:
             # 尝试加载 .env.example 作为备选 (仅用于开发)
             env_example = self.project_root / ".env.example"
             if env_example.exists():
-                print(f"警告: 未找到 .env 文件，正在使用 .env.example")
+                logger.warning(f"警告: 未找到 .env 文件，正在使用 .env.example")
                 load_dotenv(env_example)
 
     def load(self) -> dict[str, Any]:

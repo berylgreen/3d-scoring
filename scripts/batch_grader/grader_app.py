@@ -22,6 +22,7 @@ from core.data_loader import (
 )
 from batch_grader import prompts
 import re
+from core.logger import logger
 
 def extract_names_from_string(text):
     """提取组长、组员名字的简单启发式"""
@@ -51,7 +52,7 @@ def get_file_structure(directory):
 
 class Evaluator:
     def __init__(self):
-        print("Initializing LLM...")
+        logger.info("Initializing LLM...")
         factory = LLMFactory(config_path=str(PROJECT_ROOT / "config" / "settings.yaml"))
         self.llm = factory.create_llm()
 
@@ -123,7 +124,7 @@ class Evaluator:
             try:
                 uploaded_video = self.llm.upload_file(video_path)
             except Exception as e:
-                print(f"  [警告] 视频上传失败: {e}")
+                logger.warning(f"  [警告] 视频上传失败: {e}")
                 
         render_images = find_render_images(folder_path)
         uploaded_images = []
@@ -133,9 +134,9 @@ class Evaluator:
                     display_name = os.path.basename(img_path)
                     up_img = self.llm.upload_file(img_path, display_name=display_name)
                     uploaded_images.append(up_img)
-                    print(f"  [图片上传] 成功上传效果图: {display_name}")
+                    logger.info(f"  [图片上传] 成功上传效果图: {display_name}")
                 except Exception as e:
-                    print(f"  [警告] 图片 {img_path} 上传失败: {e}")
+                    logger.warning(f"  [警告] 图片 {img_path} 上传失败: {e}")
         
         try:
             if settings.GRADING_MODE == "individual":
@@ -231,9 +232,9 @@ class Evaluator:
                     display_name = os.path.basename(img_path)
                     up_img = self.llm.upload_file(img_path, display_name=display_name)
                     uploaded_images.append(up_img)
-                    print(f"  [图片上传] 成功上传效果图: {display_name}")
+                    logger.info(f"  [图片上传] 成功上传效果图: {display_name}")
                 except Exception as e:
-                    print(f"  [警告] 图片 {img_path} 上传失败: {e}")
+                    logger.warning(f"  [警告] 图片 {img_path} 上传失败: {e}")
         
         try:
             if settings.GRADING_MODE == "group":
@@ -322,7 +323,7 @@ class Evaluator:
             try:
                 uploaded_video = self.llm.upload_file(video_path)
             except Exception as e:
-                print(f"  [警告] 视频上传失败: {e}")
+                logger.warning(f"  [警告] 视频上传失败: {e}")
                 
         render_images = find_render_images(folder_path)
         uploaded_images = []
@@ -332,9 +333,9 @@ class Evaluator:
                     display_name = os.path.basename(img_path)
                     up_img = self.llm.upload_file(img_path, display_name=display_name)
                     uploaded_images.append(up_img)
-                    print(f"  [图片上传] 成功上传效果图: {display_name}")
+                    logger.info(f"  [图片上传] 成功上传效果图: {display_name}")
                 except Exception as e:
-                    print(f"  [警告] 图片 {img_path} 上传失败: {e}")
+                    logger.warning(f"  [警告] 图片 {img_path} 上传失败: {e}")
         
         try:
             if settings.GRADING_MODE == "individual":
@@ -414,16 +415,16 @@ class Evaluator:
                     pass
 
 def run_batch():
-    print("=" * 60)
-    print(f"3D 评分系统 - {settings.COURSE_TYPE.upper()} - {settings.GRADING_MODE.upper()}")
-    print("=" * 60)
+    logger.info("=" * 60)
+    logger.info(f"3D 评分系统 - {settings.COURSE_TYPE.upper()} - {settings.GRADING_MODE.upper()}")
+    logger.info("=" * 60)
     
     if not settings.ENABLE_LLM_GRADING:
-        print("大模型评分已禁用。")
+        logger.info("大模型评分已禁用。")
         return
         
     targets = collect_targets_from_disk()
-    print(f"找到 {len(targets)} 个待评分目标。")
+    logger.info(f"找到 {len(targets)} 个待评分目标。")
     
     results = []
     if JSON_DATA_PATH.exists():
@@ -431,7 +432,7 @@ def run_batch():
             with open(JSON_DATA_PATH, 'r', encoding='utf-8') as f:
                 results = json.load(f)
         except Exception as e:
-            print(f"Error loading existing results: {e}")
+            logger.error(f"Error loading existing results: {e}")
             
     # Processed names
     processed_names = set()
@@ -441,13 +442,13 @@ def run_batch():
             processed_names.add(name)
 
     targets_to_process = [t for t in targets if t["folder_name"] not in processed_names]
-    print(f"需要处理: {len(targets_to_process)}")
+    logger.info(f"需要处理: {len(targets_to_process)}")
     
     evaluator = Evaluator()
     
     try:
         for target in targets_to_process:
-            print(f"\nProcessing: {target['folder_name']}")
+            logger.info(f"\nProcessing: {target['folder_name']}")
             try:
                 result = evaluator.grade_target(target)
                 results.append(result)
@@ -460,16 +461,16 @@ def run_batch():
                 os.replace(temp_file, JSON_DATA_PATH)
                 
             except Exception as e:
-                print(f"Error processing {target['folder_name']}: {e}")
+                logger.error(f"Error processing {target['folder_name']}: {e}")
                 traceback.print_exc()
                 
             # 基础延时，避免触发限流
             if settings.API_DELAY_SECONDS > 0:
                 import time
-                print(f"  [延时] 休息 {settings.API_DELAY_SECONDS} 秒，以满足 API 限流要求...")
+                logger.info(f"  [延时] 休息 {settings.API_DELAY_SECONDS} 秒，以满足 API 限流要求...")
                 time.sleep(settings.API_DELAY_SECONDS)
     except BaseException as outer_e:
-        print(f"\n[FATAL ERROR] 评分程序遭遇严重异常/中断，即将退出: {outer_e}")
+        logger.error(f"\n[FATAL ERROR] 评分程序遭遇严重异常/中断，即将退出: {outer_e}")
         traceback.print_exc()
         raise
 

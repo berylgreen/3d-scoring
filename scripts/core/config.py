@@ -17,7 +17,7 @@ class Settings:
             sys.path.insert(0, root_str)
 
         # 加载 .env 文件
-        env_path = self.PROJECT_ROOT / "scoring_scripts" / ".env"
+        env_path = self.PROJECT_ROOT / "scripts" / ".env"
         load_dotenv(env_path, encoding='utf-8', override=True)
 
         # 加载 config.yaml
@@ -89,7 +89,7 @@ class Settings:
         # =====================
         # 批处理子目录
         # =====================
-        self.BATCH_GRADER_DIR = self.PROJECT_ROOT / "scoring_scripts" / "batch_grader"
+        self.BATCH_GRADER_DIR = self.PROJECT_ROOT / "scripts" / "batch_grader"
         self.STUDENT_WEB_DIR = self.PROJECT_ROOT / "scoring_web"
 
 # 全局单例

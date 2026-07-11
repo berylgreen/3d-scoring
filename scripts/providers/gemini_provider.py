@@ -13,6 +13,7 @@ from google import genai
 from google.genai import types
 
 from core.base_llm import BaseLLM
+from core.logger import logger
 
 
 class AllQuotasExceededError(Exception):
@@ -85,7 +86,7 @@ class GeminiProvider(BaseLLM):
                 self._current_key_index = i
                 self.api_key = self.api_keys[i]  # 同步更新基类属性
                 self.client = self._create_client()
-                print(f"\n  [切换] 切换到 API Key #{i+1}")
+                logger.info(f"\n  [切换] 切换到 API Key #{i+1}")
                 return True
         return False
 
@@ -101,7 +102,7 @@ class GeminiProvider(BaseLLM):
         if not self._is_quota_error(e):
             raise e  
         key_num = self._current_key_index + 1
-        print(f"\n  [!] API Key #{key_num} 限额已超出: {e}")
+        logger.warning(f"\n  [!] API Key #{key_num} 限额已超出: {e}")
         if self._switch_to_next_key():
             raise QuotaExceededError(f"Key #{key_num} 限额超出，已切换")
         else:
@@ -180,18 +181,18 @@ class GeminiProvider(BaseLLM):
                     raise ValueError("模型未返回有效响应")
                     
             except QuotaExceededError:
-                print("  [重试] 使用新 Key 重新请求...")
+                logger.info("  [重试] 使用新 Key 重新请求...")
                 attempt = 0
                 continue
             except json.JSONDecodeError as e:
-                print(f"  [!] JSON 解析失败，模型返回内容可能不符合规范: {e}")
+                logger.warning(f"  [!] JSON 解析失败，模型返回内容可能不符合规范: {e}")
                 # 抛出异常由上层处理或重试机制处理
                 raise ValueError(f"模型返回内容无法解析为 JSON: {response.text}")
             except Exception as e:
                 if self._is_quota_error(e):
                     if attempt < max_retries:
                         delay = 5 * (2 ** attempt)
-                        print(f"  [重试] 遇到频率限制 (429)，等待 {delay} 秒后重试 (第 {attempt + 1}/{max_retries} 次)...")
+                        logger.info(f"  [重试] 遇到频率限制 (429)，等待 {delay} 秒后重试 (第 {attempt + 1}/{max_retries} 次)...")
                         time.sleep(delay)
                         attempt += 1
                         continue
@@ -199,11 +200,11 @@ class GeminiProvider(BaseLLM):
                         try:
                             self._handle_quota_error(e)
                         except QuotaExceededError:
-                            print("  [重试] 切换新 Key 后重新请求...")
+                            logger.info("  [重试] 切换新 Key 后重新请求...")
                             attempt = 0
                             continue
                         except AllQuotasExceededError:
-                            print(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
+                            logger.error(f"\n  [!] 严重错误：已到达大模型使用限额，且重试后依然受限。程序即将退出。")
                             sys.exit(1)
                 else:
                     raise
@@ -226,7 +227,7 @@ class GeminiProvider(BaseLLM):
                 with Image.open(file_path) as img:
                     img.save(temp_path, format="PNG")
             except Exception as e:
-                print(f"  [!] BMP 转 PNG 失败: {e}")
+                logger.warning(f"  [!] BMP 转 PNG 失败: {e}")
                 temp_path = os.path.join(temp_dir, f"llm_upload_{uuid.uuid4().hex[:8]}{ext}")
                 shutil.copy2(file_path, temp_path)
         else:
@@ -266,7 +267,7 @@ class GeminiProvider(BaseLLM):
             name = file_name.name if hasattr(file_name, 'name') else file_name
             self.client.files.delete(name=name)
         except Exception as e:
-            print(f"删除文件失败 {file_name}: {e}")
+            logger.warning(f"删除文件失败 {file_name}: {e}")
 
     def chat(self, messages: list[dict]) -> str:
         """多轮对话"""

@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+from core.logger import logger
 
 def extract_project_name(folder_name, all_student_names):
     # Clean suffix like (1), (2)
@@ -25,10 +26,10 @@ def main():
     excel_path = r'\\ugreen-ff03\cc_4TRaid1\学生文件\考试学生答卷\2025-2026下\计算机三维动画设计基础\24数媒.xlsx'
     work_dir = r'\\ugreen-ff03\cc_4TRaid1\学生文件\考试学生答卷\2025-2026下\计算机三维动画设计基础\作品'
     
-    print(f"Reading excel file: {excel_path}")
+    logger.info(f"Reading excel file: {excel_path}")
     df = pd.read_excel(excel_path, dtype=str)
     
-    print(f"Scanning directory: {work_dir}")
+    logger.info(f"Scanning directory: {work_dir}")
     dirs = [d for d in os.listdir(work_dir) if os.path.isdir(os.path.join(work_dir, d))]
     
     student_id_col = None
@@ -41,7 +42,7 @@ def main():
             student_name_col = col
             
     if not student_id_col or not student_name_col:
-        print("Error: Could not find '学号' or '姓名' columns in the excel file.")
+        logger.error("Error: Could not find '学号' or '姓名' columns in the excel file.")
         return
         
     all_student_names = [str(x).strip() for x in df[student_name_col].tolist()]
@@ -67,9 +68,9 @@ def main():
             match_count += 1
             
     # Save back to the excel file
-    print(f"Matched {match_count} out of {len(df)} students.")
+    logger.info(f"Matched {match_count} out of {len(df)} students.")
     df.to_excel(excel_path, index=False, engine='openpyxl')
-    print("Successfully updated the excel file with project names.")
+    logger.info("Successfully updated the excel file with project names.")
 
 if __name__ == '__main__':
     main()

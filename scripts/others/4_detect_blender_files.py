@@ -9,6 +9,7 @@ sys.path.insert(0, str(SCRIPT_DIR))
 
 from core.config import settings
 from core.data_loader import find_max_files
+from core.logger import logger
 
 def check_blender(item_index, item):
     group_info = item.get("group_info", {})
@@ -29,14 +30,14 @@ def check_blender(item_index, item):
 def main():
     json_path = settings.GRADING_RESULTS_JSON
     if not json_path.exists():
-        print(f"找不到评分数据: {json_path}")
-        print("请确认已经执行过评分或者数据文件存在。")
+        logger.info(f"找不到评分数据: {json_path}")
+        logger.info("请确认已经执行过评分或者数据文件存在。")
         return
 
     with open(json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
         
-    print(f"正在启动多线程扫描 {len(data)} 个作品的 Blender 文件...")
+    logger.info(f"正在启动多线程扫描 {len(data)} 个作品的 Blender 文件...")
 
     # 用多线程加速扫描，8线程大概率能跑满磁盘IO
     with ThreadPoolExecutor(max_workers=8) as executor:
@@ -59,14 +60,14 @@ def main():
                 
             print(f"\r进度: {count}/{len(data)}", end="")
 
-    print(f"\n扫描完成！共发现 {blender_count} 个 Blender 作品。")
+    logger.info(f"\n扫描完成！共发现 {blender_count} 个 Blender 作品。")
     
     # 将更新后的数据写回 JSON
     with open(json_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
         
-    print(f"已将 is_blender 标记持久化写入到 {json_path.name} 中。")
-    print("您可以重新启动服务器 (.\\server.bat restart)，现在作品列表页面将会秒开。")
+    logger.info(f"已将 is_blender 标记持久化写入到 {json_path.name} 中。")
+    logger.info("您可以重新启动服务器 (.\\server.bat restart)，现在作品列表页面将会秒开。")
 
 if __name__ == "__main__":
     main()

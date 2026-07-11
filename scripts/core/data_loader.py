@@ -6,6 +6,7 @@ from typing import List, Dict, Optional, Tuple
 from docx import Document
 
 from core.config import settings
+from core.logger import logger
 
 # 外部数据路径 (从 config 读取)
 JSON_DATA_PATH = settings.GRADING_RESULTS_JSON
@@ -114,7 +115,7 @@ def load_all_targets() -> List[Dict]:
             })
         return targets
     except Exception as e:
-        print(f"Error loading JSON data: {e}")
+        logger.error(f"Error loading JSON data: {e}")
         return []
 
 def collect_targets_from_disk() -> List[Dict]:
@@ -125,7 +126,7 @@ def collect_targets_from_disk() -> List[Dict]:
     # 因为 config.py 中已经配置 WORKS_ROOT_DIR 为 DATA_DIR / "作品"
     # 如果该目录不存在，说明根目录下没有“作品”文件夹
     if not os.path.isdir(works_root):
-        print(f"⚠️ 提示: 未找到名为 '作品' 的文件夹 ({works_root})，将不扫描任何数据。")
+        logger.info(f"⚠️ 提示: 未找到名为 '作品' 的文件夹 ({works_root})，将不扫描任何数据。")
         return targets
 
     for folder in os.listdir(works_root):
@@ -400,7 +401,7 @@ def extract_and_save_docx_images(docx_path: str, output_dir: str) -> List[str]:
                 saved_images.append(img_path)
                 img_index += 1
     except Exception as e:
-        print(f"Error extracting images from {docx_path}: {e}")
+        logger.error(f"Error extracting images from {docx_path}: {e}")
     return saved_images
 
 def find_max_files(folder_path: str) -> List[Dict[str, str]]:
@@ -454,7 +455,7 @@ def _extract_docx_text(docx_path: str) -> str:
                     full_text.append(" | ".join(row_text))
         return '\n'.join(full_text)
     except Exception as e:
-        print(f"Error reading {docx_path}: {e}")
+        logger.error(f"Error reading {docx_path}: {e}")
         return ""
 
 def _extract_docx_html(docx_path: str) -> str:
