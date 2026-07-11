@@ -37,7 +37,10 @@ class OpenAIProvider(BaseLLM):
         super().__init__(api_key, model_name, base_url)
         
         # 构建 OpenAI 客户端
-        client_kwargs = {"api_key": api_key}
+        client_kwargs = {
+            "api_key": api_key,
+            "default_headers": {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+        }
         if base_url:
             client_kwargs["base_url"] = base_url
             
