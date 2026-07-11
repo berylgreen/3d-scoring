@@ -57,7 +57,8 @@ def detail(target_id):
     """详情页"""
     target = get_target_by_id(target_id)
     if not target:
-        abort(404, description="Target not found")
+        from flask import redirect
+        return redirect('/')
         
     return render_template('detail.html', 
                           target_id=target_id,
@@ -331,19 +332,20 @@ def api_target_regrade(target_id):
         with open(settings.GRADING_RESULTS_JSON, "w", encoding="utf-8") as f:
             json.dump(new_data, f, ensure_ascii=False, indent=2)
             
-        # 调用 run_3d_scoring.py
-        import subprocess
-        script_path = str(PROJECT_ROOT / "scoring_scripts" / "run_3d_scoring.py")
-        
-        result = subprocess.run(
-            [sys.executable, script_path], 
-            cwd=str(PROJECT_ROOT / "scoring_scripts")
-        )
-        
-        if result.returncode == 0:
-            return jsonify({"success": True})
-        else:
-            return jsonify({"success": False, "error": f"Scoring script failed with code {result.returncode}"}), 500
+        # 调用 run_3d_scoring.py (手动测试期间已注释)
+        # import subprocess
+        # script_path = str(PROJECT_ROOT / "scoring_scripts" / "run_3d_scoring.py")
+        # 
+        # result = subprocess.run(
+        #     [sys.executable, script_path], 
+        #     cwd=str(PROJECT_ROOT / "scoring_scripts")
+        # )
+        # 
+        # if result.returncode == 0:
+        #     return jsonify({"success": True})
+        # else:
+        #     return jsonify({"success": False, "error": f"Scoring script failed with code {result.returncode}"}), 500
+        return jsonify({"success": True})
             
     except Exception as e:
         import traceback

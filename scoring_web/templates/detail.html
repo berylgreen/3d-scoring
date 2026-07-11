@@ -767,10 +767,12 @@
                     window.location.reload();
                 } else {
                     alert("重评失败: " + (data.error || "未知错误"));
+                    window.location.href = "/";
                 }
             } catch (e) {
                 console.error(e);
                 alert("重评请求失败");
+                window.location.href = "/";
             } finally {
                 regradeBtn.innerText = originalText;
                 regradeBtn.disabled = false;
