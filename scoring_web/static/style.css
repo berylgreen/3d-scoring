@@ -942,7 +942,24 @@ textarea.edit-input {
     transition: transform 0.3s;
 }
 
-.effect-img-item:hover img {
+.effect-img-item.empty-slot {
+    cursor: default;
+}
+
+.empty-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    border: 1px dashed var(--border-color);
+    box-sizing: border-box;
+}
+
+.effect-img-item:not(.empty-slot):hover img {
     transform: scale(1.05);
 }
 

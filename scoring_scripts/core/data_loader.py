@@ -256,9 +256,25 @@ def find_thumbnail(folder_path: str) -> Optional[str]:
 def find_effect_images(folder_path: str) -> List[str]:
     images = []
     if not folder_path or not os.path.exists(folder_path):
-        return images
+        return [""] * 4
     
-    all_images = _fast_rglob(folder_path, IMAGE_EXTENSIONS)
+    # 优先在“作品效果图”文件夹找
+    target_dir = None
+    for root, dirs, files in os.walk(folder_path):
+        dirs[:] = [d for d in dirs if d not in IGNORE_DIRS]
+        for d in dirs:
+            if "作品效果图" in d:
+                target_dir = os.path.join(root, d)
+                break
+        if target_dir:
+            break
+            
+    if target_dir:
+        # 找到了文件夹，获取里面的所有图片
+        all_images = _fast_rglob(target_dir, IMAGE_EXTENSIONS)
+    else:
+        # 如果没找到文件夹，搜索整个项目，但只会选取符合命名规范的图，绝不拿其他无关贴图凑数
+        all_images = _fast_rglob(folder_path, IMAGE_EXTENSIONS)
         
     all_images.sort(key=lambda x: x.name)
     used_images = set()
@@ -268,7 +284,7 @@ def find_effect_images(folder_path: str) -> List[str]:
         prefix_dash = f"{i}-"
         prefix_only = str(i)
         found = False
-        selected_path = None
+        selected_path = ""
         
         for img_path in all_images:
             if img_path.name.startswith(prefix_underscore):
@@ -291,10 +307,15 @@ def find_effect_images(folder_path: str) -> List[str]:
                     found = True
                     break
                     
-        if not found:
-            if i < len(all_images):
-                selected_path = str(all_images[i])
-                found = True
+        # 如果没找到带前缀的：
+        # 如果有作品效果图文件夹，里面有学生传的效果图，我们可以按顺序拿来展示
+        if not found and target_dir:
+            for img_path in all_images:
+                p = str(img_path)
+                if p not in used_images:
+                    selected_path = p
+                    found = True
+                    break
 
         if found and selected_path:
             if selected_path in used_images:
@@ -305,6 +326,9 @@ def find_effect_images(folder_path: str) -> List[str]:
                         break
             images.append(selected_path)
             used_images.add(selected_path)
+        else:
+            # 没有足够的图，填充空字符串，前端不会渲染其他无关图来凑数
+            images.append("")
     
     return images
 

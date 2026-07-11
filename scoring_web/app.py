@@ -26,7 +26,8 @@ from core.data_loader import (
     find_thumbnail,
     find_effect_images,
     find_personal_images,
-    find_max_files
+    find_max_files,
+    find_personal_docx_files
 )
 
 app = Flask(__name__)
@@ -228,10 +229,17 @@ def api_target_detail(target_id):
     docx_path = find_docx_file(folder_path)
     docx_html = extract_docx_content(docx_path, as_html=True) if docx_path else "<p class='text-gray-500 italic'>未找到报告文档 (.docx)</p>"
     
+    # 获取个人文档内容
+    personal_docs = find_personal_docx_files(folder_path)
+    personal_docs_html = {}
+    for stu_name, p_docx_path in personal_docs.items():
+        personal_docs_html[stu_name] = extract_docx_content(p_docx_path, as_html=True)
+    
     response_data = {
         "success": True,
         "target": target,
         "document_html": docx_html,
+        "personal_docs_html": personal_docs_html,
         "media": {}
     }
     
@@ -243,7 +251,7 @@ def api_target_detail(target_id):
     if settings.COURSE_TYPE in ("modeling", "3d_comprehensive"):
         # Modeling/3D Comprehensive: effect images, personal images, max files
         effect_images = find_effect_images(folder_path)
-        response_data["media"]["effect_images"] = [f"/api/image/{target_id}/effect/{i}" for i in range(len(effect_images))]
+        response_data["media"]["effect_images"] = [f"/api/image/{target_id}/effect/{i}" if img else "" for i, img in enumerate(effect_images)]
         
         if settings.GRADING_MODE == "group":
             personal_images = find_personal_images(folder_path, target.get("individuals", []))
@@ -295,6 +303,53 @@ def api_target_update(target_id):
         import traceback
         traceback.print_exc()
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route('/api/target/<path:target_id>/regrade', methods=['POST'])
+def api_target_regrade(target_id):
+    """AI重评：删除该组的json数据，并调用run_3d_scoring.py重新评分"""
+    if not settings.GRADING_RESULTS_JSON.exists():
+        return jsonify({"success": False, "error": "No JSON file"}), 404
+        
+    try:
+        with open(settings.GRADING_RESULTS_JSON, "r", encoding="utf-8") as f:
+            all_data = json.load(f)
+            
+        # 找到并删除该组的数据
+        new_data = []
+        deleted = False
+        for item in all_data:
+            group_info = item.get("group_info", {})
+            if group_info.get("group_name") == target_id or group_info.get("name") == target_id:
+                deleted = True
+                continue
+            new_data.append(item)
+            
+        if not deleted:
+            return jsonify({"success": False, "error": "Target not found in JSON"}), 404
+            
+        # 保存新的JSON
+        with open(settings.GRADING_RESULTS_JSON, "w", encoding="utf-8") as f:
+            json.dump(new_data, f, ensure_ascii=False, indent=2)
+            
+        # 调用 run_3d_scoring.py
+        import subprocess
+        script_path = str(PROJECT_ROOT / "scoring_scripts" / "run_3d_scoring.py")
+        
+        result = subprocess.run(
+            [sys.executable, script_path], 
+            cwd=str(PROJECT_ROOT / "scoring_scripts")
+        )
+        
+        if result.returncode == 0:
+            return jsonify({"success": True})
+        else:
+            return jsonify({"success": False, "error": f"Scoring script failed with code {result.returncode}"}), 500
+            
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @app.route('/api/thumbnail/<path:target_id>')
 def api_thumbnail(target_id):

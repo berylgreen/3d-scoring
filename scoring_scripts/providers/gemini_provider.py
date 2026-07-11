@@ -217,10 +217,23 @@ class GeminiProvider(BaseLLM):
         # 复制到临时目录避免中文路径问题
         temp_dir = tempfile.gettempdir()
         ext = os.path.splitext(file_path)[1]
-        temp_path = os.path.join(temp_dir, f"llm_upload_{uuid.uuid4().hex[:8]}{ext}")
+        
+        # 针对 Gemini 不支持的 BMP 格式进行转换
+        if ext.lower() == '.bmp':
+            try:
+                from PIL import Image
+                temp_path = os.path.join(temp_dir, f"llm_upload_{uuid.uuid4().hex[:8]}.png")
+                with Image.open(file_path) as img:
+                    img.save(temp_path, format="PNG")
+            except Exception as e:
+                print(f"  [!] BMP 转 PNG 失败: {e}")
+                temp_path = os.path.join(temp_dir, f"llm_upload_{uuid.uuid4().hex[:8]}{ext}")
+                shutil.copy2(file_path, temp_path)
+        else:
+            temp_path = os.path.join(temp_dir, f"llm_upload_{uuid.uuid4().hex[:8]}{ext}")
+            shutil.copy2(file_path, temp_path)
         
         try:
-            shutil.copy2(file_path, temp_path)
             try:
                 upload_kwargs = {"file": temp_path}
                 if display_name:

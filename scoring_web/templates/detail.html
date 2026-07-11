@@ -50,6 +50,7 @@
                 <div class="edit-actions">
                     <span id="confirmedBadge" class="confirmed-badge hidden">✓ 已确认</span>
                     <span id="unconfirmedBadge" class="unconfirmed-badge hidden">? 未确认</span>
+                    <button id="regradeBtn" class="btn btn-primary btn-sm" style="background-color: #8b5cf6;" onclick="regradeAI()">AI重评</button>
                     <button id="editBtn" class="btn btn-primary btn-sm" onclick="toggleEdit()">编辑</button>
                     <button id="saveBtn" class="btn btn-success btn-sm hidden" onclick="saveChanges()">保存</button>
                     <button id="cancelBtn" class="btn btn-secondary btn-sm hidden" onclick="toggleEdit()">取消</button>
@@ -116,6 +117,10 @@
             <!-- Report Document Section -->
             <div class="section doc-section">
                 <h2>作品报告</h2>
+                <div class="doc-tabs-container" style="margin-bottom: 15px;">
+                    <button class="doc-tab-btn btn btn-primary btn-sm" data-tab="project" onclick="switchDocTab('project')" style="margin-right: 10px;">作品文档</button>
+                    <span id="personalDocTabs"></span>
+                </div>
                 <div id="docContent" class="doc-viewer">
                     <!-- HTML content from docx -->
                 </div>
@@ -140,6 +145,9 @@
         const courseType = "{{ course }}";
         let currentData = null;
         let isEditing = false;
+        
+        let projectDocHtml = "";
+        let personalDocsHtml = {};
 
         // Lightbox zoom/pan state
         let lbScale = 1;
@@ -395,12 +403,22 @@
                 document.getElementById('effectImagesSection').classList.remove('hidden');
                 const effectGrid = document.getElementById('effectImagesGrid');
                 const labels = ['主参考图', '最终渲染', '线框检查', 'UV展开'];
-                effectGrid.innerHTML = data.media.effect_images.map((url, idx) => `
+                effectGrid.innerHTML = data.media.effect_images.map((url, idx) => {
+                    if (!url) {
+                        return `
+                        <div class="effect-img-item empty-slot">
+                            <div class="empty-placeholder">未提交</div>
+                            <span class="effect-label">${labels[idx] || ''}</span>
+                        </div>
+                        `;
+                    }
+                    return `
                     <div class="effect-img-item" onclick="openLightbox('${url}')">
                         <img src="${url}" alt="${labels[idx] || '效果图'}" loading="lazy">
                         <span class="effect-label">${labels[idx] || ''}</span>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             }
 
             // Video
@@ -438,7 +456,16 @@
             `}).join('');
 
             // Document
-            document.getElementById('docContent').innerHTML = data.document_html;
+            projectDocHtml = data.document_html;
+            personalDocsHtml = data.personal_docs_html || {};
+            
+            let personalTabsHtml = '';
+            for (const stu_name in personalDocsHtml) {
+                personalTabsHtml += `<button class="doc-tab-btn btn btn-secondary btn-sm" data-tab="${stu_name}" onclick="switchDocTab('${stu_name}')" style="margin-right: 10px;">${stu_name} - 个人文档</button>`;
+            }
+            document.getElementById('personalDocTabs').innerHTML = personalTabsHtml;
+            
+            switchDocTab('project');
 
             // Build gallery array for navigation
             allImages = [];
@@ -462,6 +489,24 @@
                     autoResizeTextarea(this);
                 });
             });
+        }
+
+        function switchDocTab(tabId) {
+            document.querySelectorAll('.doc-tab-btn').forEach(btn => {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            });
+            const activeBtn = document.querySelector(`.doc-tab-btn[data-tab="${tabId}"]`);
+            if (activeBtn) {
+                activeBtn.classList.remove('btn-secondary');
+                activeBtn.classList.add('btn-primary');
+            }
+            
+            if (tabId === 'project') {
+                document.getElementById('docContent').innerHTML = projectDocHtml || "<p class='text-gray-500 italic'>未找到报告文档 (.docx)</p>";
+            } else {
+                document.getElementById('docContent').innerHTML = personalDocsHtml[tabId] || "<p class='text-gray-500 italic'>未找到个人文档</p>";
+            }
         }
 
         function calculateLiveScores() {
@@ -697,6 +742,38 @@
             } catch (e) {
                 console.error(e);
                 alert("保存失败");
+            }
+        }
+
+        async function regradeAI() {
+            if (!confirm("确定要删除当前评分数据并使用AI重新评分吗？该过程可能需要1-2分钟。")) {
+                return;
+            }
+            
+            const regradeBtn = document.getElementById('regradeBtn');
+            const originalText = regradeBtn.innerText;
+            regradeBtn.innerText = "重评中...";
+            regradeBtn.disabled = true;
+            
+            try {
+                const res = await fetch(`/api/target/${encodeURIComponent(targetId)}/regrade`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await res.json();
+                if (data.success) {
+                    alert("重新评分完成！");
+                    window.location.reload();
+                } else {
+                    alert("重评失败: " + (data.error || "未知错误"));
+                }
+            } catch (e) {
+                console.error(e);
+                alert("重评请求失败");
+            } finally {
+                regradeBtn.innerText = originalText;
+                regradeBtn.disabled = false;
             }
         }
 
