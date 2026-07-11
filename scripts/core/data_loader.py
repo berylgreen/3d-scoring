@@ -175,9 +175,26 @@ def find_video_file(folder_path: str) -> Optional[str]:
     if not candidates:
         return None
         
+    # 获取目录基础名称作为项目名/作者名的参考
+    folder_name = os.path.basename(folder_path.rstrip(r'\/')).lower()
+    
     def sort_key(p):
         name = p.name.lower()
+        ext = p.suffix.lower()
         score = 0
+        
+        # 网页播放兼容性：优先 MP4 格式
+        if ext == ".mp4":
+            score += 10000
+            
+        # 寻找文件名与项目名（文件夹名）相关的
+        parts = [part for part in folder_name.replace('-', '_').split('_') if part]
+        for part in parts:
+            if part in name:
+                score += 500
+        if folder_name in name:
+            score += 1000
+            
         if "最终" in name: score += 100
         if "render" in name: score += 50
         if "animation" in name: score += 50

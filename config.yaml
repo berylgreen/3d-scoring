@@ -1,9 +1,10 @@
 # 课程与模式配置
-course_type: "modeling" # 课程类型，可选值: animation, modeling, 3d_comprehensive
+course_type: "animation" # 课程类型，可选值: animation, modeling, 3d_comprehensive
 grading_mode: "group"    # 打分模式，可选值: individual, group
 
 # 数据存放路径
-data_dir: "Z:\\学生文件\\考试学生答卷\\2025-2026下\\计算机三维动画设计基础"
+#data_dir: "Z:\\学生文件\\考试学生答卷\\2025-2026下\\计算机三维动画设计基础"
+data_dir: "Z:\\学生文件\\考试学生答卷\\2025-2026下\\三维动画技术"
 
 # 评分行为配置
 enable_llm_grading: true
