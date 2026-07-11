@@ -30,7 +30,7 @@ if "%found%"=="1" (
     goto end
 )
 echo [START] Starting server (Hidden Console)...
-start "" pythonw scoring_web\app.py
+start "" pythonw web\app.py
 echo [SUCCESS] Server started in background!
 echo [URL] Visit http://127.0.0.1:5000
 goto end
@@ -63,7 +63,7 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":5000" ^| findstr "LISTENING
 powershell -NoProfile -Command "Get-CimInstance Win32_Process | Where-Object { $_.Name -match '^pythonw?\.exe$' -and $_.CommandLine -match 'app\.py' } | Invoke-CimMethod -MethodName Terminate" >nul 2>&1
 ping 127.0.0.1 -n 2 >nul
 echo [START] Starting new server (Hidden Console)...
-start "" pythonw scoring_web\app.py
+start "" pythonw web\app.py
 echo [SUCCESS] Server restarted!
 echo [URL] Visit http://127.0.0.1:5000
 goto end
