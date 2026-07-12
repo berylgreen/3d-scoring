@@ -21,12 +21,29 @@ except Exception as e:
     sys.exit(1)
 
 score_dir = os.path.join(base_dir, "平时成绩")
-target_files = [f for f in glob.glob(os.path.join(score_dir, "*.xlsx")) if not os.path.basename(f).startswith('~$')]
+target_files = [f for f in glob.glob(os.path.join(score_dir, "*.xlsx")) if not os.path.basename(f).startswith('~$') and '统计一键导出' not in os.path.basename(f)]
 if not target_files:
-    print(f"错误: 未在 {score_dir} 找到目标汇总 Excel 文件")
+    print(f"错误: 未在 {score_dir} 找到合适的目标汇总 Excel 文件（排除了统计文件）")
     sys.exit(1)
-target_file = target_files[0]
+
+target_file = None
+df_target = None
+for f in target_files:
+    try:
+        df = pd.read_excel(f)
+        if any('学号' in str(col) for col in df.columns):
+            target_file = f
+            df_target = df
+            break
+    except Exception:
+        continue
+
+if not target_file:
+    print(f"错误: 未在 {score_dir} 的文件中找到包含'学号'列的目标文件")
+    sys.exit(1)
+
 print(f"找到目标汇总文件: {target_file}")
+print("Target file columns:", df_target.columns.tolist())
 
 missing_hw_dir = os.path.join(score_dir, "缺交作品名单")
 if not os.path.exists(missing_hw_dir):
@@ -37,10 +54,6 @@ hw_files = [f for f in os.listdir(missing_hw_dir) if f.endswith('.xlsx') and not
 if not hw_files:
     print(f"错误: 在 {missing_hw_dir} 中没有找到任何缺交作业文件")
     sys.exit(1)
-
-# Load target file to get the correct column names
-df_target = pd.read_excel(target_file)
-print("Target file columns:", df_target.columns.tolist())
 
 # Process missing homework files
 missing_counts = {}
