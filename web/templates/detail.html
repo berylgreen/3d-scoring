@@ -203,10 +203,10 @@
             ];
         }
 
-        // Load group list for navigation
         async function loadGroupList() {
             try {
-                const res = await fetch('/api/targets');
+                const dv = localStorage.getItem('data_version') || '0';
+                const res = await fetch('/api/targets?v=' + dv);
                 const data = await res.json();
                 allGroups = data.data.map(g => g.target_id);
                 currentGroupIndex = allGroups.indexOf(targetId);
@@ -269,7 +269,8 @@
 
         async function loadDetail() {
             try {
-                const res = await fetch(`/api/target/${encodeURIComponent(targetId)}`);
+                const dv = localStorage.getItem('data_version') || '0';
+                const res = await fetch(`/api/target/${encodeURIComponent(targetId)}?v=` + dv);
                 if (!res.ok) throw new Error("Not found");
                 currentData = await res.json();
                 renderDetail(currentData);
@@ -731,6 +732,7 @@
                 });
 
                 if (res.ok) {
+                    localStorage.setItem('data_version', Date.now().toString());
                     // Update UI state to non-editing
                     isEditing = false;
                     document.getElementById('editBtn').classList.remove('hidden');
@@ -765,6 +767,7 @@
                 
                 const data = await res.json();
                 if (data.success) {
+                    localStorage.setItem('data_version', Date.now().toString());
                     alert("重新评分完成！");
                     window.location.reload();
                 } else {

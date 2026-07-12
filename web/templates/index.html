@@ -78,7 +78,8 @@
 
         async function loadGroups() {
             try {
-                const res = await fetch('/api/targets');
+                const dv = localStorage.getItem('data_version') || '0';
+                const res = await fetch('/api/targets?v=' + dv);
                 const data = await res.json();
                 allGroups = data.data.map(t => {
                     const info = t.grading_result?.group_info || {};

@@ -250,7 +250,8 @@
 
         async function loadStudents(sort = 'score_desc') {
             try {
-                const res = await fetch(`/api/students?sort=${sort}`);
+                const dv = localStorage.getItem('data_version') || '0';
+                const res = await fetch(`/api/students?sort=${sort}&v=` + dv);
                 const data = await res.json();
                 allStudents = data.students;
                 document.getElementById('totalStudents').innerText = data.total;
