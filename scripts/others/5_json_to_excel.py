@@ -38,20 +38,44 @@ def main():
         group_base = {
             '小组名称': group_info.get('group_name', ''),
             '小组': group_info.get('total_group_score', 0),
-            '主题创意': scores.get('theme_creativity', 0),
-            '难度与工作量': scores.get('difficulty_workload', 0),
-            '建模准确性与完成度': scores.get('modeling_accuracy', 0),
-            '模型细节与表现力': scores.get('model_details', 0),
-            '拓扑结构合理性': scores.get('topology', 0),
-            '材质和贴图': scores.get('materials_textures', 0),
-            '纹理映射/UV展开': scores.get('uv_mapping', 0),
-            '光照渲染': scores.get('lighting_rendering', 0),
-            '整体视觉质量': scores.get('visual_quality', 0),
-            '文档整理': scores.get('documentation', 0),
+        }
+        
+        # 兼容多种评分标准（建模/动画）
+        score_mapping = {
+            # 建模类
+            'theme_creativity': '主题创意',
+            'difficulty_workload': '难度与工作量',
+            'modeling_accuracy': '建模准确性与完成度',
+            'model_details': '模型细节与表现力',
+            'topology': '拓扑结构合理性',
+            'materials_textures': '材质和贴图',
+            'uv_mapping': '纹理映射/UV展开',
+            'lighting_rendering': '光照渲染',
+            'visual_quality': '整体视觉质量',
+            'documentation': '文档整理',
+            
+            # 动画类
+            'creativity': '创意与剧本',
+            'storyboard': '分镜与镜头',
+            'modeling': '建模与场景',
+            'basic_tech': '基础动画技术',
+            'adv_tech': '高级动画技术',
+            'fluency': '动画流畅度',
+            'rendering': '材质光影与渲染',
+            'post_production': '剪辑特效与音效配乐',
+            'document': '文档整理'
+        }
+        
+        for key, value in scores.items():
+            if key in score_mapping:
+                chinese_name = score_mapping[key]
+                group_base[chinese_name] = value
+
+        group_base.update({
             '小组工作量评价': group_info.get('workload_comment', ''),
             '小组整体评语': group_info.get('comments', ''),
             '作品路径': group_info.get('folder_path', '')
-        }
+        })
         
         if not individuals:
             # 如果没有解析出个人，仅保留组信息
@@ -59,6 +83,8 @@ def main():
                 '学号': '',
                 '姓名': '',
                 '期末成绩(100)': group_base['小组'] * 0.8,
+                '平时成绩(100)': '',
+                '总分': '',
                 '个人': 0,
                 '个人任务描述': '',
                 '个人评语': ''
@@ -75,6 +101,8 @@ def main():
                     '学号': ind.get('student_id', ''),
                     '姓名': ind.get('student_name', ''),
                     '期末成绩(100)': total_score,
+                    '平时成绩(100)': '',
+                    '总分': '',
                     '个人': ind_score,
                 }
                 row.update(group_base)
@@ -86,14 +114,21 @@ def main():
     df = pd.DataFrame(flattened_data)
     
     sub_items = [
+        # 建模
         '主题创意', '难度与工作量', '建模准确性与完成度', '模型细节与表现力',
         '拓扑结构合理性', '材质和贴图', '纹理映射/UV展开', '光照渲染',
+        
+        # 动画
+        '创意与剧本', '分镜与镜头', '建模与场景', '基础动画技术',
+        '高级动画技术', '动画流畅度', '材质光影与渲染', '剪辑特效与音效配乐',
+        
+        # 通用
         '整体视觉质量', '文档整理'
     ]
     
     # 调整列的顺序，使其更加符合教师查看成绩的习惯
     cols = ['学号', '姓名', '小组名称'] + sub_items + [
-            '小组', '个人', '期末成绩(100)',
+            '小组', '个人', '期末成绩(100)', '平时成绩(100)', '总分',
             '个人任务描述', '个人评语', 
             '小组工作量评价', '小组整体评语', '作品路径']
     
@@ -231,8 +266,18 @@ def main():
                         final_col = get_column_letter(existing_cols.index('期末成绩(100)') + 1)
                         group_col = get_column_letter(existing_cols.index('小组') + 1)
                         ind_col = get_column_letter(existing_cols.index('个人') + 1)
+                        
+                        has_pingshi = '平时成绩(100)' in existing_cols
+                        has_total = '总分' in existing_cols
+                        if has_pingshi and has_total:
+                            pingshi_col = get_column_letter(existing_cols.index('平时成绩(100)') + 1)
+                            total_col = get_column_letter(existing_cols.index('总分') + 1)
+
                         for row in range(2, len(df) + 2):
-                            worksheet[f"{final_col}{row}"].value = f"={group_col}{row}*0.8+{ind_col}{row}"
+                            worksheet[f"{final_col}{row}"].value = f"=ROUND({group_col}{row}*0.8+{ind_col}{row}, 0)"
+                            if has_pingshi and has_total:
+                                # 默认总分为期末70%+平时30%，四舍五入。
+                                worksheet[f"{total_col}{row}"].value = f"=IF(ISBLANK({pingshi_col}{row}), {final_col}{row}, ROUND({final_col}{row}*0.7+{pingshi_col}{row}*0.3, 0))"
                 except Exception as e:
                     logger.error(f"写入公式失败: {e}")
                     
