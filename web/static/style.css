@@ -331,6 +331,7 @@ body {
 
 .main-content {
     order: 1;
+    min-width: 0;
 }
 
 .detail-title {
@@ -465,8 +466,10 @@ body {
 
 .video-wrapper video {
     width: 100%;
+    max-height: 70vh;
     border-radius: 8px;
     background: #000;
+    object-fit: contain;
 }
 
 .members-grid {
