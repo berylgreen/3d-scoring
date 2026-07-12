@@ -286,10 +286,10 @@ COMPREHENSIVE_3D_INDIVIDUAL_PROMPT = """
 
 【评分标准】(满分100分 = 作品分100分 * 0.8 + 个人工作量分20分)
 1. 作品整体打分（满分100分），请严格按照以下5个维度打分（每项0-20分的整数）：
-- 主题契合与文化内涵 (theme_culture, 0-20分)
+- 主题契合与创新创意 (theme_culture, 0-20分)
 - 三维建模与拓扑结构 (modeling_topology, 0-20分)
 - 材质纹理与灯光渲染 (materials_lighting, 0-20分)
-- 创新创意与整体表现 (innovation_performance, 0-20分)
+- 后期制作与视觉表现 (innovation_performance, 0-20分)
 - 工程规范与论述文档 (engineering_document, 0-20分)
 
 2. 个人工作量评价（满分20分）：评价该学生的工作量、所用技术难度及最终成果，打出“个人评价分” (individual_score，必须为整数)。
@@ -343,10 +343,10 @@ COMPREHENSIVE_3D_GROUP_PROMPT = """
 
 【评分标准】(满分100分 = 小组作品分100分 * 0.8 + 个人工作量分20分)
 1. 小组作品整体打分（满分100分），请严格按照以下5个维度打分（每项0-20分的整数）：
-- 主题契合与文化内涵 (theme_culture, 0-20分)
+- 主题契合与创新创意 (theme_culture, 0-20分)
 - 三维建模与拓扑结构 (modeling_topology, 0-20分)
 - 材质纹理与灯光渲染 (materials_lighting, 0-20分)
-- 创新创意与整体表现 (innovation_performance, 0-20分)
+- 后期制作与视觉表现 (innovation_performance, 0-20分)
 - 工程规范与论述文档 (engineering_document, 0-20分)
 
 2. 个人工作量评价（满分20分）：提取并评价每位成员的具体工作量和贡献，打出“个人评价分” (individual_score，必须为整数)。
