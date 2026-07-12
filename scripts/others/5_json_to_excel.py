@@ -63,7 +63,14 @@ def main():
             'fluency': '动画流畅度',
             'rendering': '材质光影与渲染',
             'post_production': '剪辑特效与音效配乐',
-            'document': '文档整理'
+            'document': '文档整理',
+            
+            # 三维综合
+            'theme_culture': '主题契合与创新创意',
+            'modeling_topology': '三维建模与拓扑结构',
+            'materials_lighting': '材质纹理与灯光渲染',
+            'innovation_performance': '后期制作与视觉表现',
+            'engineering_document': '工程规范与论述文档'
         }
         
         for key, value in scores.items():
@@ -121,6 +128,10 @@ def main():
         # 动画
         '创意与剧本', '分镜与镜头', '建模与场景', '基础动画技术',
         '高级动画技术', '动画流畅度', '材质光影与渲染', '剪辑特效与音效配乐',
+        
+        # 三维综合
+        '主题契合与创新创意', '三维建模与拓扑结构', '材质纹理与灯光渲染',
+        '后期制作与视觉表现', '工程规范与论述文档',
         
         # 通用
         '整体视觉质量', '文档整理'

@@ -3,7 +3,10 @@ import glob
 import os
 import sys
 import yaml
+import warnings
 from pathlib import Path
+
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 CONFIG_PATH = os.path.join(Path(__file__).resolve().parent.parent.parent, "config.yaml")
 try:
