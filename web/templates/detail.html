@@ -399,7 +399,7 @@
             }
 
             // Effect Images (0-3)
-            if (data.media.effect_images && data.media.effect_images.length > 0) {
+            if (courseType !== '3d_comprehensive' && data.media.effect_images && data.media.effect_images.length > 0) {
                 document.getElementById('effectImagesSection').classList.remove('hidden');
                 const effectGrid = document.getElementById('effectImagesGrid');
                 const labels = ['主参考图', '最终渲染', '线框检查', 'UV展开'];

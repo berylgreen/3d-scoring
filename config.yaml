@@ -1,5 +1,5 @@
 # 课程与模式配置
-course_type: "3d_comprehensive" # 课程类型，可选值: animation, modeling, 3d_comprehensive
+course_type: "animation" # 课程类型，可选值: animation, modeling, 3d_comprehensive
 grading_mode: "group"    # 打分模式，可选值: individual, group
 
 # 数据存放路径

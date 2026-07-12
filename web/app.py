@@ -244,20 +244,21 @@ def api_target_detail(target_id):
         "media": {}
     }
     
-    if settings.COURSE_TYPE in ("animation", "3d_comprehensive"):
-        video_path = find_video_file(folder_path)
-        if video_path:
-            response_data["media"]["video_url"] = f"/api/video/{target_id}"
+    # 统一获取视频
+    video_path = find_video_file(folder_path)
+    if video_path:
+        response_data["media"]["video_url"] = f"/api/video/{target_id}"
             
-    if settings.COURSE_TYPE in ("modeling", "3d_comprehensive"):
-        # Modeling/3D Comprehensive: effect images, personal images, max files
-        effect_images = find_effect_images(folder_path)
-        response_data["media"]["effect_images"] = [f"/api/image/{target_id}/effect/{i}" if img else "" for i, img in enumerate(effect_images)]
-        
-        if settings.GRADING_MODE == "group":
-            personal_images = find_personal_images(folder_path, target.get("individuals", []))
-            response_data["media"]["personal_images"] = {name: f"/api/image/{target_id}/personal/{name}" for name in personal_images}
+    # 统一获取效果图
+    effect_images = find_effect_images(folder_path)
+    response_data["media"]["effect_images"] = [f"/api/image/{target_id}/effect/{i}" if img else "" for i, img in enumerate(effect_images)]
+    
+    # 统一获取个人贡献图
+    if settings.GRADING_MODE == "group":
+        personal_images = find_personal_images(folder_path, target.get("individuals", []))
+        response_data["media"]["personal_images"] = {name: f"/api/image/{target_id}/personal/{name}" for name in personal_images}
             
+    # 统一获取源文件
     max_files = find_max_files(folder_path)
     if max_files:
         response_data["media"]["max_files"] = max_files
