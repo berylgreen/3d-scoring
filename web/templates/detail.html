@@ -169,37 +169,37 @@
         let SCORE_KEYS_ORDER = [];
         if (courseType === 'animation') {
             SCORE_KEYS_ORDER = [
-                { key: 'creativity', label: '创意与剧本' },
-                { key: 'storyboard', label: '分镜与镜头' },
-                { key: 'modeling', label: '建模与场景' },
-                { key: 'basic_tech', label: '基础动画技术' },
-                { key: 'adv_tech', label: '高级动画技术' },
-                { key: 'fluency', label: '动画流畅度' },
-                { key: 'rendering', label: '材质光影与渲染' },
-                { key: 'post_production', label: '剪辑特效与音效配乐' },
-                { key: 'visual_quality', label: '整体视觉质量' },
-                { key: 'document', label: '文档整理' }
+                { key: 'creativity', label: '创意与剧本', max: 10 },
+                { key: 'storyboard', label: '分镜与镜头', max: 10 },
+                { key: 'modeling', label: '建模与场景', max: 10 },
+                { key: 'basic_tech', label: '基础动画技术', max: 10 },
+                { key: 'adv_tech', label: '高级动画技术', max: 10 },
+                { key: 'fluency', label: '动画流畅度', max: 10 },
+                { key: 'rendering', label: '材质光影与渲染', max: 10 },
+                { key: 'post_production', label: '剪辑特效与音效配乐', max: 10 },
+                { key: 'visual_quality', label: '整体视觉质量', max: 10 },
+                { key: 'document', label: '文档整理', max: 10 }
             ];
         } else if (courseType === '3d_comprehensive') {
             SCORE_KEYS_ORDER = [
-                { key: 'theme_culture', label: '主题契合与创新创意' },
-                { key: 'modeling_topology', label: '三维建模与拓扑结构' },
-                { key: 'materials_lighting', label: '材质纹理与灯光渲染' },
-                { key: 'innovation_performance', label: '后期制作与视觉表现' },
-                { key: 'engineering_document', label: '工程规范与论述文档' }
+                { key: 'theme_culture', label: '主题契合与创新创意', max: 20 },
+                { key: 'modeling_topology', label: '三维建模与拓扑结构', max: 20 },
+                { key: 'materials_lighting', label: '材质纹理与灯光渲染', max: 20 },
+                { key: 'innovation_performance', label: '后期制作与视觉表现', max: 20 },
+                { key: 'engineering_document', label: '工程规范与论述文档', max: 20 }
             ];
         } else {
             SCORE_KEYS_ORDER = [
-                { key: 'theme_creativity', label: '主题创意' },
-                { key: 'difficulty_workload', label: '难度与工作量' },
-                { key: 'modeling_accuracy', label: '建模准确性与完成度' },
-                { key: 'model_details', label: '模型细节与表现力' },
-                { key: 'topology', label: '拓扑结构合理性' },
-                { key: 'materials_textures', label: '材质和贴图' },
-                { key: 'uv_mapping', label: '纹理映射/UV展开' },
-                { key: 'lighting_rendering', label: '光照渲染' },
-                { key: 'visual_quality', label: '整体视觉质量' },
-                { key: 'documentation', label: '文档整理' }
+                { key: 'theme_creativity', label: '主题创意', max: 10 },
+                { key: 'difficulty_workload', label: '难度与工作量', max: 10 },
+                { key: 'modeling_accuracy', label: '建模准确性与完成度', max: 10 },
+                { key: 'model_details', label: '模型细节与表现力', max: 10 },
+                { key: 'topology', label: '拓扑结构合理性', max: 10 },
+                { key: 'materials_textures', label: '材质和贴图', max: 10 },
+                { key: 'uv_mapping', label: '纹理映射/UV展开', max: 10 },
+                { key: 'lighting_rendering', label: '光照渲染', max: 10 },
+                { key: 'visual_quality', label: '整体视觉质量', max: 10 },
+                { key: 'documentation', label: '文档整理', max: 10 }
             ];
         }
 
@@ -346,15 +346,17 @@
             const scores = info.scores || {};
             const dims = document.getElementById('scoreDimensions');
             dims.innerHTML = SCORE_KEYS_ORDER.map(item => {
+                const maxScore = item.max || 10;
                 const v = Math.round(scores[item.key] !== undefined ? scores[item.key] : 0);
+                const pct = Math.min(100, (v / maxScore) * 100);
                 return `
                 <div class="score-row">
                     <span class="score-key">${item.label}</span>
                     <span class="score-bar-bg">
-                        <span class="score-bar-fill" style="width: ${v * 10}%"></span>
+                        <span class="score-bar-fill" style="width: ${pct}%"></span>
                     </span>
                     <span class="score-val-display">${v}</span>
-                    <input type="number" class="score-input edit-input hidden" data-key="${item.key}" value="${v}" min="0" max="10">
+                    <input type="number" class="score-input edit-input hidden" data-key="${item.key}" value="${v}" min="0" max="${maxScore}">
                 </div>
             `}).join('');
 
